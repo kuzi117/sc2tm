@@ -12,6 +12,6 @@ enum BuffOpsErr : uint8_t {
 
 BuffOpsErr writeFileToSocket(std::string filepath, int sockfd);
 
-}
+} // End namespace sc2tm
 
 #endif //SC2TM_BUFFER_OPERATIONS_H
