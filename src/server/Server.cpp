@@ -2,27 +2,21 @@
 
 #include <iostream>
 
-#include <boost/asio.hpp>
+#include <boost/bind.hpp>
 
-#include "common/server_info.h"
+void sc2tm::Server::startAccept() {
+  Connection::ptr newConn =
+      Connection::create(acceptor.get_io_service());
 
-// Shorten the crazy long namespacing to asio tcp
-using boost::asio::ip::tcp;
+  auto acceptFn = boost::bind(&sc2tm::Server::handleAccept, this, newConn,
+                              boost::asio::placeholders::error);
+   acceptor.async_accept(newConn->socket(), acceptFn);
+}
 
-void sc2tm::Server::run() {
-  try {
-    // Set up our service and tcp socket
-    boost::asio::io_service service;
-    tcp::acceptor acceptor(service, tcp::endpoint(tcp::v4(), sc2tm::serverPort));
-    tcp::socket socket(service);
-    acceptor.accept(socket);
-
-    // Send our message
-    std::string message = "Hello";
-    boost::system::error_code ignored_error;
-    boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
+void sc2tm::Server::handleAccept(Connection::ptr newCon, const boost::system::error_code &error) {
+  if (!error) {
+    newCon->start();
   }
-  catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
-  }
+
+  startAccept();
 }
