@@ -11,6 +11,7 @@ set(
 set(
   server_src
     server/main.cpp
+    server/Connection.cpp
     server/Server.cpp
 )
 
