@@ -37,12 +37,13 @@
 
 #ifndef SHA256_H
 #define SHA256_H
-#include <string>
 
 // Taken from http://www.zedwood.com/article/cpp-sha256-function
-// The only significant change by me (Braedy Kuzma) is the removal of the
-// sha256(std::string input) function, and the addition of the
-// sha256(std::ifstream &file) function.
+// Significant changes (Braedy Kuzma):
+//   - removed std::string sha256(std::string input)
+//   - added SHA256Hash class which is a light wrapper around a digest
+//   - added SHA256Hash::ptr sha256(std::ifstream &file)
+//   - added ostream overloads for printing SHA256Hash
 
 class SHA256
 {
@@ -67,7 +68,35 @@ protected:
     uint32 m_h[8];
 };
 
-std::string sha256(std::ifstream &file);
+//! Light wrapper around SHA256 digest.
+class SHA256Hash {
+  //! The actual digest bits.
+  uint8_t buff[SHA256::DIGEST_SIZE];
+public:
+  //! Pointer to a hash.
+  typedef std::unique_ptr<SHA256Hash> ptr;
+
+  //! Default constructor.
+  SHA256Hash() : buff() { }
+
+  //! Operator to offer convenient buffer access.
+  uint8_t &operator[](const uint8_t i) { return buff[i]; }
+
+  //! Operator to offer convenient buffer access.
+  const uint8_t &operator[](const uint8_t i) const { return buff[i]; }
+
+  //! Offers access to the underlying digest.
+  uint8_t *get() { return (uint8_t *) &buff; }
+};
+
+//! Generates a pointer to SHA256Hash from a file.
+SHA256Hash::ptr sha256(std::ifstream &file);
+
+//! Prints a SHA256Hash by pointer (delegates to the reference version).
+std::ostream &operator<<(std::ostream &os, const SHA256Hash::ptr &hashp);
+
+//! Prints a SHA256Hash.
+std::ostream& operator<<(std::ostream& os, const SHA256Hash &hash);
 
 #define SHA2_SHFR(x, n)    (x >> n)
 #define SHA2_ROTR(x, n)   ((x >> n) | (x << ((sizeof(x) << 3) - n)))

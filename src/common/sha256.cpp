@@ -38,6 +38,8 @@
 
 #include <cstring>
 #include <fstream>
+#include <iomanip>
+#include <memory>
 #include "common/sha256.h"
 
 const unsigned int SHA256::sha256_k[64] = //UL = uint32
@@ -153,14 +155,14 @@ void SHA256::final(unsigned char *digest)
 }
 
 // Written by Braedy Kuzma
-std::string sha256(std::ifstream &file)
+SHA256Hash::ptr sha256(std::ifstream &file)
 {
-    unsigned char digest[SHA256::DIGEST_SIZE];
-    memset(digest, 0, SHA256::DIGEST_SIZE);
+    // Construct our digest
+    SHA256Hash::ptr digest = std::make_unique<SHA256Hash>();
 
     // get length of file:
     file.seekg (0, file.end);
-    int length = file.tellg();
+    std::streamsize length = file.tellg();
     file.seekg (0, file.beg);
 
     // Initialize the SHA context
@@ -172,8 +174,8 @@ std::string sha256(std::ifstream &file)
     unsigned char buff[buffSize] = { };
 
     // Iteratively update the context
-    int totalRead = 0;
-    int read = 0;
+    std::streamsize totalRead = 0;
+    std::streamsize read = 0;
     while (totalRead < length)
     {
         // Read into the buffer
@@ -187,13 +189,35 @@ std::string sha256(std::ifstream &file)
         totalRead += read;
     }
 
-    // Get our final digest
-    ctx.final(digest);
+    // Get our final digest, note that this is getting the buffer from the digest, not getting
+    // the smart pointer's bare pointer
+    ctx.final(digest->get());
 
-    // From the original string input function.
-    char buf[2*SHA256::DIGEST_SIZE+1];
-    buf[2*SHA256::DIGEST_SIZE] = 0;
-    for (int i = 0; i < SHA256::DIGEST_SIZE; i++)
-        sprintf(buf+i*2, "%02x", digest[i]);
-    return std::string(buf);
+    return std::move(digest);
 }
+
+// Delegate to the version that prints references
+std::ostream &operator<<(std::ostream &os, const SHA256Hash::ptr &hashp) {
+  os << *hashp;
+  return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const SHA256Hash &hash) {
+    // Save old formatting
+    std::ios oldFormat(nullptr);
+    oldFormat.copyfmt(os);
+
+    // Set up formatting
+    os << std::setfill('0') << std::setw(2) << std::hex;
+
+    // Do our printing
+    for (int i = 0;i < SHA256::DIGEST_SIZE; i++)
+      os << (int) hash[i];
+
+    // Restore formatting
+    os.copyfmt(oldFormat);
+
+    return os;
+}
+
+
