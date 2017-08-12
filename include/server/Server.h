@@ -3,7 +3,7 @@
 
 #include <boost/asio.hpp>
 
-#include "common/server_info.h"
+#include "common/config.h"
 #include "server/Connection.h"
 
 using namespace boost;

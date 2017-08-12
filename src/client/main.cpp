@@ -3,7 +3,7 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 
-#include "common/server_info.h"
+#include "common/config.h"
 
 // Shorten the crazy long namespacing to asio tcp
 using boost::asio::ip::tcp;
