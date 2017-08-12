@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
     return 0;
 
   boost::asio::io_service service;
-  sc2tm::Server s(service);
+  sc2tm::Server s(service, opts.getOpt("maps"), opts.getOpt("bots"));
   service.run();
 
   return 0;

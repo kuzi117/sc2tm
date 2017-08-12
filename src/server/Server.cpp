@@ -1,7 +1,19 @@
 #include "server/Server.h"
 
-sc2tm::Server::Server(asio::io_service &service) :
+#include <iostream>
+
+sc2tm::Server::Server(asio::io_service &service, std::string mapDir, std::string botDir) :
     acceptor(service, tcp::endpoint(tcp::v4(), serverPort)) {
+  hashMapDirectory(mapDir, mapMap);
+  hashBotDirectory(botDir, botMap);
+
+  for (auto mapInfo : mapMap)
+    std::cout << mapInfo.first << " SHA256: " << mapInfo.second << "\n";
+
+  for (auto botInfo : botMap)
+    std::cout << botInfo.first << " SHA256: " << botInfo.second << "\n";
+
+
   startAccept();
 }
 

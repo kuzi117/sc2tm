@@ -4,6 +4,7 @@
 #include <boost/asio.hpp>
 
 #include "common/config.h"
+#include "common/file_operations.h"
 #include "server/Connection.h"
 
 using namespace boost;
@@ -13,9 +14,11 @@ namespace sc2tm {
 
 class Server {
   tcp::acceptor acceptor;
+  SHAFileMap mapMap;
+  SHAFileMap botMap;
 
 public:
-  Server(asio::io_service &service);
+  Server(asio::io_service &service, std::string mapDir, std::string botDir);
 
 private:
   //! Start accepting new connections asynchronously.
