@@ -33,6 +33,10 @@ public:
   //! Prints usage message.
   void usage();
 
+  inline std::string getOpt(std::string name) {
+    return optionResults[name];
+  }
+
 protected:
   //! Register a new option to be parsed
   /**
