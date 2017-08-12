@@ -4,7 +4,6 @@
 #include <memory>
 
 #include <boost/asio.hpp>
-#include <boost/enable_shared_from_this.hpp>
 
 using namespace boost;
 using boost::asio::ip::tcp;
@@ -30,12 +29,10 @@ public:
   //! Start state function
   void start();
 
+  ~Connection();
+
 private:
   Connection(asio::io_service &service) : _socket(service) { }
-
-  // State Functions
-  void noop(const boost::system::error_code& error, std::size_t bytesSent) { }
-
 
 };
 

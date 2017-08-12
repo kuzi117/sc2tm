@@ -15,9 +15,7 @@ class Server {
   tcp::acceptor acceptor;
 
 public:
-  Server(asio::io_service &service) : acceptor(service, tcp::endpoint(tcp::v4(), serverPort)) {
-    startAccept();
-  }
+  Server(asio::io_service &service);
 
 private:
   //! Start accepting new connections asynchronously.
