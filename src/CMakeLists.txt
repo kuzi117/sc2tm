@@ -1,6 +1,7 @@
 set(
   common_src
     common/buffer_operations.cpp
+    common/sha256.cpp
 )
 
 set(
