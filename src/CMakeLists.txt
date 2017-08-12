@@ -1,8 +1,9 @@
 set(
   common_src
     common/buffer_operations.cpp
-    common/sha256.cpp
     common/CLOpts.cpp
+    common/file_operations.cpp
+    common/sha256.cpp
 )
 
 set(
@@ -20,5 +21,10 @@ set(
 add_executable(sc2tm_srv ${common_src} ${server_src})
 add_executable(sc2tm_clt ${common_src} ${client_src})
 
-target_link_libraries(sc2tm_srv ${Boost_LIBRARIES})
-target_link_libraries(sc2tm_clt ${Boost_LIBRARIES} pthread)
+set(
+  common_libs
+    stdc++fs
+)
+
+target_link_libraries(sc2tm_srv ${Boost_LIBRARIES} ${common_libs})
+target_link_libraries(sc2tm_clt ${Boost_LIBRARIES} ${common_libs} pthread)
