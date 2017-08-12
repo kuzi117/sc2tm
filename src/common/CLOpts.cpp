@@ -89,7 +89,8 @@ bool sc2tm::CLOpts::parseOpts(int argc, char **argv) {
     if (it == args.end())
       continue;
 
-    std::cout << "FOUND " << it->first << " " << it->second << "\n";
+    // TODO DEBUG
+//    std::cout << "FOUND " << it->first << " " << it->second << "\n";
 
     // If it's a flag, add it to the flag results and drop the arg
     if (option.second.flag) {
