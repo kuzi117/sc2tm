@@ -67,7 +67,6 @@ protected:
     uint32 m_h[8];
 };
 
-std::string sha256(std::string input);
 std::string sha256(std::ifstream &file);
 
 #define SHA2_SHFR(x, n)    (x >> n)
