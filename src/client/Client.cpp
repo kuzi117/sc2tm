@@ -82,5 +82,6 @@ void sc2tm::Client::readPregameDisconnectReason() {
   PregameDisconnectPacket p(buffer);
   std::cout << "GOT PREGAME DISCONNECT REASON: " << p.reason << '\n';
 
-  assert(false); // TODO Shutdown gracefully
+  // Note that we don't schedule any work here thus the ioservice will have no more work and should
+  // end the run loop
 }
