@@ -37,8 +37,10 @@ sc2tm::ClientHandshakePacket::ClientHandshakePacket(const SHAFileMap &botMap,
     assert(hash.size() == SHA256::DIGEST_SIZE);
 }
 
-sc2tm::ClientHandshakePacket::ClientHandshakePacket() :
-    clientMajorVersion(0), clientMinorVersion(0), clientPatchVersion(0) { };
+sc2tm::ClientHandshakePacket::ClientHandshakePacket(boost::asio::streambuf &buffer) :
+    clientMajorVersion(0), clientMinorVersion(0), clientPatchVersion(0) {
+  fromBuffer(buffer);
+};
 
 void sc2tm::ClientHandshakePacket::toBuffer(boost::asio::streambuf &buff) {
   // Sanity checking
@@ -73,8 +75,7 @@ void sc2tm::ClientHandshakePacket::toBuffer(boost::asio::streambuf &buff) {
 
   // write all of the bytes of the bot hashes
   for (const auto &hash : botHashes)
-    for (uint8_t b : hash)
-      os << b;
+    writeHashBuffer(hash.data(), os);
 
   // Cast the size of the vector down to uint32_t, we don't need more than 4b hashes, then into the
   // buffer
@@ -82,8 +83,7 @@ void sc2tm::ClientHandshakePacket::toBuffer(boost::asio::streambuf &buff) {
 
   // write all of the bytes of the map hashes
   for (const auto &hash : mapHashes)
-    for (uint8_t b : hash)
-      os << b;
+    writeHashBuffer(hash.data(), os);
 }
 
 void sc2tm::ClientHandshakePacket::fromBuffer(boost::asio::streambuf &buffer) {
@@ -99,11 +99,8 @@ void sc2tm::ClientHandshakePacket::fromBuffer(boost::asio::streambuf &buffer) {
   // Now read in that number of hashes
   for (int i = 0; i < botHashesSize; ++i) {
     std::vector<uint8_t> digest(SHA256::DIGEST_SIZE, 0);
-    for (int j = 0; j < SHA256::DIGEST_SIZE; ++j) {
-      uint8_t byte = 0;
-      is >> byte;
-      digest.push_back(byte);
-    }
+    assert(digest.size() >= SHA256::DIGEST_SIZE);
+    readHashBuffer(digest.data(), is);
     botHashes.push_back(digest);
   }
 
@@ -113,11 +110,8 @@ void sc2tm::ClientHandshakePacket::fromBuffer(boost::asio::streambuf &buffer) {
   // Now read in that number of hashes
   for (int i = 0; i < mapHashesSize; ++i) {
     std::vector<uint8_t> digest(SHA256::DIGEST_SIZE, 0);
-    for (int j = 0; j < SHA256::DIGEST_SIZE; ++j) {
-      uint8_t byte = 0;
-      is >> byte;
-      digest.push_back(byte);
-    }
+    assert(digest.size() >= SHA256::DIGEST_SIZE);
+    readHashBuffer(digest.data(), is);
     mapHashes.push_back(digest);
   }
 }

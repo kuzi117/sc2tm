@@ -22,9 +22,11 @@ struct Packet {
    */
   virtual void toBuffer(boost::asio::streambuf &buffer) = 0;
 
-  //! Construct this packet from the bytes in a buffer.
+protected:
+
+  //! Fill this packet from the bytes in a buffer.
   /**
-   * Construct this packet from the bytes in a buffer. Will pull out as many bytes as necessary.
+   * Fill this packet from the bytes in a buffer. Will pull out as many bytes as necessary.
    * Assumes the correct number of bytes are waiting in the buffer.
    *
    * @param buffer The buffer to construct from.
@@ -69,9 +71,16 @@ struct ClientHandshakePacket : Packet {
    */
   virtual void toBuffer(boost::asio::streambuf &buffer) override;
 
-  //! Construct this packet from the bytes in a buffer.
+  //! Construct a handshake from the bytes in a buffer.
   /**
-   * Construct this packet from the bytes in a buffer. Assumes that the caller has already accounted
+   * Construct an invalid handshake that is intended to be filled in by fromBuffer.
+   */
+  ClientHandshakePacket(boost::asio::streambuf &buffer);
+
+protected:
+  //! Fill this packet from the bytes in a buffer.
+  /**
+   * Fill this packet from the bytes in a buffer. Assumes that the caller has already accounted
    * for the variable length of this packet and the correct number of bytes are waiting in the
    * buffer.
    *
@@ -79,12 +88,6 @@ struct ClientHandshakePacket : Packet {
    */
   virtual void fromBuffer(boost::asio::streambuf &buffer) override;
 
-protected:
-  //! Construct an invalid handshake.
-  /**
-   * Construct an invalid handshake that is intended to be filled in by fromBuffer.
-   */
-  ClientHandshakePacket();
 };
 
 } // End sc2tm namespace
