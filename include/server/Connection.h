@@ -10,9 +10,9 @@ using boost::asio::ip::tcp;
 
 namespace sc2tm {
 
-class Connection : public std::enable_shared_from_this<Connection> {
+class Connection {
   tcp::socket _socket;
-  std::string buffer;
+  boost::asio::streambuf buffer;
 
 public:
   typedef std::shared_ptr<Connection> ptr;
@@ -33,6 +33,9 @@ public:
 
 private:
   Connection(asio::io_service &service) : _socket(service) { }
+
+  // State functions
+  void readHandshake();
 
 };
 
