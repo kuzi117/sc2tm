@@ -67,5 +67,20 @@ void sc2tm::Client::sendHandshake() {
 }
 
 void sc2tm::Client::readPregameCommand() {
+  PregameCommandPacket p(buffer);
+  std::cout << "GOT PREGAME COMMAND: " << p.cmd << '\n'; // TODO debug
 
+  switch (p.cmd) {
+  case DISCONNECT: readPregameDisconnectReason(); break;
+  case START_GAME: break; // TODO start game
+  default:
+    assert(false); // TODO handle bad command?
+  }
+}
+
+void sc2tm::Client::readPregameDisconnectReason() {
+  PregameDisconnectPacket p(buffer);
+  std::cout << "GOT PREGAME DISCONNECT REASON: " << p.reason << '\n';
+
+  assert(false); // TODO Shutdown gracefully
 }

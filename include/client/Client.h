@@ -58,6 +58,9 @@ private:
   void sendHandshake();
   //! Receive a pregame command.
   void readPregameCommand();
+
+  // Pregame state functions
+  void readPregameDisconnectReason();
 };
 
 } // End sc2tm namespace
