@@ -43,10 +43,10 @@ public:
    * Construct a server that handles sending clients SC2 games to play in a tournament.
    *
    * @param service The io service this server runs on.
-   * @param mapDir The directory where the maps are located.
    * @param botDir The directory where the bots are located.
+   * @param mapDir The directory where the maps are located.
    */
-  Server(asio::io_service &service, std::string mapDir, std::string botDir);
+  Server(asio::io_service &service, std::string botDir, std::string mapDir);
 
 private:
   //! Start accepting new connections asynchronously.
