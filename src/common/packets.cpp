@@ -3,8 +3,6 @@
 #include <arpa/inet.h>
 #include <cassert>
 #include <cstring>
-#include <istream>
-#include <ostream>
 #include <iostream>
 
 #include "common/config.h"
