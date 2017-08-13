@@ -3,6 +3,7 @@ set(
     common/buffer_operations.cpp
     common/CLOpts.cpp
     common/file_operations.cpp
+    common/packets.cpp
     common/sha256.cpp
 )
 
