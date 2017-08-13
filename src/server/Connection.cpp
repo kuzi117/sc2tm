@@ -17,7 +17,6 @@ void sc2tm::Connection::start() {
         assert(bytes_transferred == sizeof(uint32_t));
 
         // Create an istream from the buffer
-        std::cout << buffer.size() << "\n";
         std::istream is(&buffer);
 
         // Read in size and convert to host
@@ -39,4 +38,21 @@ void sc2tm::Connection::start() {
 
 void sc2tm::Connection::readHandshake() {
   ClientHandshakePacket packet(buffer);
+  std::cout << "\nClient connect: \n";
+  std::cout << "VERSION: "
+            << (int) packet.clientMajorVersion << '.'
+            << (int) packet.clientMinorVersion << '.'
+            << (int) packet.clientPatchVersion << '\n';
+
+  std::cout << "bots\n";
+  for (auto hash : packet.botHashes) {
+    SHA256Hash shahash(hash.data());
+    std::cout << shahash << "\n";
+  }
+
+  std::cout << "maps\n";
+  for (auto hash : packet.mapHashes) {
+    SHA256Hash shahash(hash.data());
+    std::cout << shahash << "\n";
+  }
 }
