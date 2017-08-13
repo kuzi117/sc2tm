@@ -35,6 +35,8 @@ protected:
   virtual void fromBuffer(boost::asio::streambuf &buffer) = 0;
 };
 
+// --- ClientHandShakePacket
+
 //! All data required for a client handshake packet.
 struct ClientHandshakePacket : Packet {
   // These fields aren't necessary when we're constructing a packet to send because they're
@@ -89,6 +91,12 @@ protected:
    */
   virtual void fromBuffer(boost::asio::streambuf &buffer) override;
 
+};
+
+// --- PreGamePacket
+enum PregameCommand : uint8_t {
+  DISCONNECT = 0,
+  START_GAME
 };
 
 } // End sc2tm namespace
