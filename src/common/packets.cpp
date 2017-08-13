@@ -119,9 +119,10 @@ void sc2tm::ClientHandshakePacket::fromBuffer(boost::asio::streambuf &buffer) {
 void sc2tm::PregameCommandPacket::toBuffer(boost::asio::streambuf &buffer) {
   // Create an ostream from the buffer
   std::ostream os(&buffer);
+  std::cout << "SENDING COMMAND: " << cmd << '\n';
 
   // Write the command to the buffer.
-  os << cmd;
+  os << static_cast<uint8_t>(cmd);
 }
 
 void sc2tm::PregameCommandPacket::fromBuffer(boost::asio::streambuf &buffer) {
@@ -140,7 +141,7 @@ void sc2tm::PregameDisconnectPacket::toBuffer(boost::asio::streambuf &buffer) {
   std::ostream os(&buffer);
 
   // Write the command to the buffer.
-  os << reason;
+  os << static_cast<uint8_t>(reason);
 }
 
 void sc2tm::PregameDisconnectPacket::fromBuffer(boost::asio::streambuf &buffer) {
