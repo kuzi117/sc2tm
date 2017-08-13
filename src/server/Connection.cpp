@@ -1,10 +1,11 @@
 #include "server/Connection.h"
 
 #include "common/buffer_operations.h"
+#include "common/config.h"
 #include "common/packets.h"
+#include "server/Server.h"
 
 #include <iostream>
-#include <common/config.h>
 
 sc2tm::Connection::~Connection() {
   std::cout << "CONNECTION DYING\n";
@@ -72,8 +73,7 @@ void sc2tm::Connection::sendPregameDisconnect(PregameDisconnectReason r) {
 
   auto destroyConnectionFn =
       [&] (const boost::system::error_code& error, std::size_t byteCount) {
-        _socket.close();
-        // TODO destroy connection object
+        server.requestDestroyConnection(id);
       };
   boost::asio::async_write(_socket, buffer, destroyConnectionFn);
 }

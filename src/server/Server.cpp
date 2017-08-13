@@ -19,24 +19,34 @@ sc2tm::Server::Server(asio::io_service &service, std::string botDir, std::string
 
 void sc2tm::Server::startAccept() {
   // Create a new connection
+  Connection::ConnId id = nextId++; // Generate id, we need to use it twice
   Connection::ptr newConn =
-      Connection::create(acceptor.get_io_service());
+      Connection::create(*this, acceptor.get_io_service(), id);
 
-  // Add it to the list of connections so it won't die..
-  conns.push_back(newConn);
+  // Locking scope
+  {
+    std::lock_guard<std::mutex> lock(connMutex);
+    conns[id] = newConn;
+  }
 
   auto acceptFn =
-      [=] (const boost::system::error_code &error) {
-        handleAccept(newConn, error);
+      [&, newConn] (const boost::system::error_code &error) {
+        handleAccept(*newConn, error);
       };
 
   acceptor.async_accept(newConn->socket(), acceptFn);
 }
 
-void sc2tm::Server::handleAccept(Connection::ptr newCon, const boost::system::error_code &error) {
-  if (!error) {
-    newCon->start();
-  }
+void sc2tm::Server::handleAccept(Connection &newCon, const boost::system::error_code &error) {
+  if (!error)
+    newCon.start();
 
   startAccept();
+}
+
+void sc2tm::Server::requestDestroyConnection(Connection::ConnId id) {
+  std::cout << "ERASING CONNECTION " << id << '\n';
+  std::lock_guard<std::mutex> lock(connMutex);
+  size_t erased = conns.erase(id);
+  assert(erased == 1);
 }

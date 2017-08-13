@@ -7,6 +7,9 @@
 
 #include <boost/asio.hpp>
 
+#include <mutex>
+#include <map>
+
 using namespace boost;
 using boost::asio::ip::tcp;
 
@@ -35,12 +38,25 @@ class Server {
    */
   SHAFileMap botMap;
 
+  //! The id that will be give to the next incoming connection.
+  /**
+   * The id that will be give to the next incoming connection. Careful care needs to be taken to
+   * ensure there aren't race conditions when updating this. Use connMutex to ensure single
+   * accesses.
+   */
+  // I decided against a second mutex because I can't think of a reason that you'd ever need to
+  // access nextId unless you were already editing the list of active connections.
+  Connection::ConnId nextId = 0;
+
   //! The list of active connections.
   /**
    * The list of active connections. Careful care needs to be taken to ensure there aren't race
-   * conditions when updating this.
+   * conditions when updating this. Use connMutex to ensure single accesses.
    */
-  std::vector<Connection::ptr> conns;
+  std::map<Connection::ConnId, Connection::ptr> conns;
+
+  //! Lock for editing the list of active connections.
+  std::mutex connMutex;
 
 public:
   //! Construct a server.
@@ -53,13 +69,21 @@ public:
    */
   Server(asio::io_service &service, std::string botDir, std::string mapDir);
 
+  //! Declare Connection as a friend class.
+  /**
+   * Declare Connection as a friend class so that it can request to be destroyed.
+   */
+  friend Connection;
+
 private:
   //! Start accepting new connections asynchronously.
   void startAccept();
 
   //! Handle accepting a new connection.
-  void handleAccept(Connection::ptr newCon, const boost::system::error_code& error);
+  void handleAccept(Connection &newCon, const boost::system::error_code& error);
 
+  //! Request that a connection be destroyed.
+  void requestDestroyConnection(Connection::ConnId id);
 };
 
 } // End namespace sc2tm
