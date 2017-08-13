@@ -14,12 +14,18 @@ sc2tm::Server::Server(asio::io_service &service, std::string mapDir, std::string
     std::cout << botInfo.first.filename() << " SHA256: " << botInfo.second << "\n";
 
 
+
+
   startAccept();
 }
 
 void sc2tm::Server::startAccept() {
+  // Create a new connection
   Connection::ptr newConn =
       Connection::create(acceptor.get_io_service());
+
+  // Add it to the list of connections so it won't die..
+  conns.push_back(newConn);
 
   auto acceptFn =
       [=] (const boost::system::error_code &error) {
