@@ -37,17 +37,36 @@ void sc2tm::Client::sendHandshake() {
 
   // Put the handshake into our buffer.
   handshake.toBuffer(buffer);
-  std::cout << "GOT BUFFER SIZE: " << buffer.size() << "\n"; // TODO debug
+  std::cout << "GOT BUFFER SIZE: " << buffer.size() << "\n"; // TODO DEBUG
 
-  auto noopFn = [&] (const boost::system::error_code& error, std::size_t bytes_transferred) {
-    assert(buffer.size() == 0);
-    std::cout << "GOT ERROR CODE " << error << "\n";
-    std::cout << "WROTE " << bytes_transferred << " BYTES\n";
 
-    auto noopFn2 = [] (const boost::system::error_code& error, std::size_t bytes_transferred) { };
-    boost::asio::async_read(_socket, buffer, noopFn2);
-  };
+  // Build the function that will respond to the write being done by starting a wait for a read.
+  auto waitPregameCmdFn =
+      [&] (const boost::system::error_code& error, std::size_t byteCount) {
+        assert(error == boost::system::errc::success); // TODO handle error
+        assert(buffer.size() == 0);
 
-  // Async write our buffer
-  boost::asio::async_write(_socket, buffer, noopFn);
+        // Build the function that will respond to the buffer being filled with the server's
+        // response, which will be some PregameCommand.
+        auto readPregameCommandFn =
+            [&] (const boost::system::error_code& error2, std::size_t byteCount2) {
+              assert(error2 == boost::system::errc::success); // TODO handle error
+              assert(byteCount2 == sizeof(PregameCommand));
+              readPregameCommand();
+            };
+
+        // Async wait for the buffer to be filled with a PregameCommand. Respond by calling the
+        // function that reads PregameCommands.
+        boost::asio::async_read(_socket, buffer,
+                                boost::asio::transfer_exactly(sizeof(PregameCommand)),
+                                readPregameCommandFn);
+      };
+
+  // Async wait for the client handshake data to be written. Respond by waiting for a response from
+  // the server, namely a PregameCommand.
+  boost::asio::async_write(_socket, buffer, waitPregameCmdFn);
+}
+
+void sc2tm::Client::readPregameCommand() {
+
 }

@@ -56,6 +56,8 @@ private:
   // State functions
   //! Send the client handshake to the server.
   void sendHandshake();
+  //! Receive a pregame command.
+  void readPregameCommand();
 };
 
 } // End sc2tm namespace
