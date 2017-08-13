@@ -10,6 +10,9 @@ using boost::asio::ip::tcp;
 
 namespace sc2tm {
 
+//! Forward declare PregameDisconnectReason.
+enum PregameDisconnectReason : uint8_t;
+
 //! Represents a client's connection to the server.
 class Connection {
   //! The TCP socket this client is connected on.
@@ -46,6 +49,10 @@ private:
   // State functions
   //! Read the client handshake.
   void readHandshake();
+
+  // Pregame state functions
+  //! Send a PregameDisconnect
+  void sendPregameDisconnect(PregameDisconnectReason reason);
 
 };
 

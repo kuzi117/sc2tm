@@ -4,7 +4,7 @@
 #include "common/packets.h"
 
 #include <iostream>
-
+#include <common/config.h>
 
 sc2tm::Connection::~Connection() {
   std::cout << "CONNECTION DYING\n";
@@ -56,4 +56,24 @@ void sc2tm::Connection::readHandshake() {
     SHA256Hash shahash(hash.data());
     std::cout << shahash << "\n";
   }
+
+  if (packet.clientMajorVersion != clientMajorVersion ||
+      packet.clientMinorVersion != clientMinorVersion ||
+      packet.clientPatchVersion != clientPatchVersion)
+    sendPregameDisconnect(BAD_VERSION);
+}
+
+void sc2tm::Connection::sendPregameDisconnect(PregameDisconnectReason r) {
+  PregameCommandPacket cmd(DISCONNECT);
+  PregameDisconnectPacket reason(r);
+
+  cmd.toBuffer(buffer);
+  reason.toBuffer(buffer);
+
+  auto destroyConnectionFn =
+      [&] (const boost::system::error_code& error, std::size_t byteCount) {
+        _socket.close();
+        // TODO destroy connection object
+      };
+  boost::asio::async_write(_socket, buffer, destroyConnectionFn);
 }
