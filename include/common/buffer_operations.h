@@ -1,16 +1,16 @@
 #ifndef SC2TM_BUFFER_OPERATIONS_H
 #define SC2TM_BUFFER_OPERATIONS_H
 
-#include <string>
+#include <arpa/inet.h>
+#include <iostream>
 
 namespace sc2tm {
 
-enum BuffOpsErr : uint8_t {
-  GOOD = 0, // No error
-  NOFILE, // File doesn't exist
-};
+//! Write a uint32_t to a stream in network byte order
+void writeUint32(uint32_t val, std::ostream &os);
 
-BuffOpsErr writeFileToSocket(std::string filepath, int sockfd);
+//! Read a uin32_t from a stream in network byte order
+uint32_t readUint32(std::istream &is);
 
 } // End namespace sc2tm
 

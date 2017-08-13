@@ -1,17 +1,12 @@
-#include <fstream>
-
 #include "common/buffer_operations.h"
 
-namespace {
-  const int bufferSize = 2048;
+void sc2tm::writeUint32(uint32_t val, std::ostream &os) {
+  val = htonl(val);
+  os.write((const char *) &val, sizeof(val));
 }
 
-sc2tm::BuffOpsErr sc2tm::writeFileToSocket(std::string filepath, int sockfd) {
-  // Try to open the file
-  std::ifstream f(filepath, std::ios::in | std::ios::binary);
-  if (!f.good())
-    return NOFILE;
-
-  char buffer[bufferSize] = {};
-  f.get(buffer, bufferSize);
+uint32_t sc2tm::readUint32(std::istream &is) {
+  uint32_t value = 0;
+  is.read((char *) &value, sizeof(value));
+  return ntohl(value);
 }
