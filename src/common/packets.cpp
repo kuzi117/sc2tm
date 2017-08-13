@@ -5,8 +5,10 @@
 #include <cstring>
 #include <istream>
 #include <ostream>
+#include <iostream>
 
 #include "common/config.h"
+#include "common/buffer_operations.h"
 
 // --- ClientHandshakePacket
 sc2tm::ClientHandshakePacket::ClientHandshakePacket(const SHAFileMap &botMap,
@@ -52,6 +54,7 @@ void sc2tm::ClientHandshakePacket::toBuffer(boost::asio::streambuf &buff) {
       sizeof(uint32_t) * 2 + // The hash size fields
       sizeof(uint8_t) * SHA256::DIGEST_SIZE * botHashes.size() + // The bot hashes field
       sizeof(uint8_t) * SHA256::DIGEST_SIZE * mapHashes.size(); // The map hashes field
+  std::cout << "PREDICTED CONSTRUCTED PACKET SIZE: " << size << "\n"; // TODO DEBUG
 
   // Create an ostream from the buffer
   std::ostream os(&buff);
@@ -59,26 +62,26 @@ void sc2tm::ClientHandshakePacket::toBuffer(boost::asio::streambuf &buff) {
   // Write size to buffer. Note that we're writing size *and* data in the same step. It makes
   // no difference to the server when it receives the data, just that it listens for the correct
   // amount after receiving the size. This way we can move onto the next step in the state machine.
-  os << htonl(size);
+  writeUint32(size, os);
 
   // Writing version number is easy since they're just bytes
   os << clientMajorVersion << clientMinorVersion << clientPatchVersion;
 
-  // Cast the size of the vector down to uint32_t, we don't need more than 4b hashes, then
-  // to network order
-  os << htonl((uint32_t) botHashes.size());
+  // Cast the size of the vector down to uint32_t, we don't need more than 4b hashes, then into the
+  // buffer
+  writeUint32((uint32_t) botHashes.size(), os);
 
   // write all of the bytes of the bot hashes
   for (const auto &hash : botHashes)
     for (uint8_t b : hash)
       os << b;
 
-  // Cast the size of the vector down to uint32_t, we don't need more than 4b hashes, then
-  // to network order
-  os << htonl((uint32_t) mapHashes.size());
+  // Cast the size of the vector down to uint32_t, we don't need more than 4b hashes, then into the
+  // buffer
+  writeUint32((uint32_t) mapHashes.size(), os);
 
   // write all of the bytes of the map hashes
-  for (const auto &hash : botHashes)
+  for (const auto &hash : mapHashes)
     for (uint8_t b : hash)
       os << b;
 }
@@ -88,14 +91,10 @@ void sc2tm::ClientHandshakePacket::fromBuffer(boost::asio::streambuf &buffer) {
   std::istream is(&buffer);
 
   // Read the version numbers, they're easy.
-  is >> clientMajorVersion;
-  is >> clientMinorVersion;
-  is >> clientPatchVersion;
+  is >> clientMajorVersion >> clientMinorVersion >> clientPatchVersion;
 
-  // Read bot hash size in, then convert from network order
-  uint32_t botHashesSize = 0;
-  is >> botHashesSize;
-  botHashesSize = ntohl(botHashesSize);
+  // Read bot hash size in
+  uint32_t botHashesSize = readUint32(is);
 
   // Now read in that number of hashes
   for (int i = 0; i < botHashesSize; ++i) {
@@ -108,10 +107,8 @@ void sc2tm::ClientHandshakePacket::fromBuffer(boost::asio::streambuf &buffer) {
     botHashes.push_back(digest);
   }
 
-  // Read map hash size in, then convert from network order
-  uint32_t mapHashesSize = 0;
-  is >> mapHashesSize;
-  mapHashesSize = ntohl(mapHashesSize);
+  // Read map hash size in
+  uint32_t mapHashesSize = readUint32(is);
 
   // Now read in that number of hashes
   for (int i = 0; i < mapHashesSize; ++i) {
