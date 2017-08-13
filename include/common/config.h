@@ -5,16 +5,16 @@ namespace sc2tm {
 
 // Create server version
 const uint8_t serverMajorVersion = 0;
-const uint8_t serverMinorVersion = 0;
-const uint8_t serverPatchVersion = 1;
+const uint8_t serverMinorVersion = 1;
+const uint8_t serverPatchVersion = 0;
 const std::string serverVersionStr = std::to_string(serverMajorVersion) + '.' +
                                      std::to_string(serverMinorVersion) + '.' +
                                      std::to_string(serverPatchVersion);
 
 // Create client version
 const uint8_t clientMajorVersion = 0;
-const uint8_t clientMinorVersion = 0;
-const uint8_t clientPatchVersion = 1;
+const uint8_t clientMinorVersion = 1;
+const uint8_t clientPatchVersion = 0;
 const std::string clientVersionStr = std::to_string(clientMajorVersion) + '.' +
                                      std::to_string(clientMinorVersion) + '.' +
                                      std::to_string(clientPatchVersion);
