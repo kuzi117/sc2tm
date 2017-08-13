@@ -10,6 +10,7 @@ set(
 set(
   client_src
     client/main.cpp
+    client/Client.cpp
 )
 
 set(
