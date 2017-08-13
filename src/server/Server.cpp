@@ -7,11 +7,12 @@ sc2tm::Server::Server(asio::io_service &service, std::string botDir, std::string
   hashBotDirectory(botDir, botMap);
   hashMapDirectory(mapDir, mapMap);
 
-  for (const auto &botInfo : botMap)
-    std::cout << botInfo.first.filename() << " SHA256: " << botInfo.second << "\n";
+  // TODO DEBUG
+  for (const auto &info : botMap)
+    std::cout << info.second << " - " << info.first.filename().string()  << "\n";
 
-  for (const auto &mapInfo : mapMap)
-    std::cout << mapInfo.first.filename() << " SHA256: " << mapInfo.second << "\n";
+  for (const auto &info : mapMap)
+    std::cout << info.second << " - " << info.first.filename().string()  << "\n";
 
   startAccept();
 }
