@@ -196,6 +196,10 @@ SHA256Hash::ptr sha256(std::ifstream &file)
     return std::move(digest);
 }
 
+SHA256Hash::SHA256Hash(const uint8_t * const bytes) : buff() {
+    std::memcpy(buff, bytes, SHA256::DIGEST_SIZE);
+}
+
 // Delegate to the version that prints references
 std::ostream &operator<<(std::ostream &os, const SHA256Hash::ptr &hashp) {
   os << *hashp;

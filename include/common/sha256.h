@@ -45,6 +45,8 @@
 //   - added SHA256Hash::ptr sha256(std::ifstream &file)
 //   - added ostream overloads for printing SHA256Hash
 
+#include <memory>
+
 class SHA256
 {
 protected:
@@ -78,6 +80,9 @@ public:
 
   //! Default constructor.
   SHA256Hash() : buff() { }
+
+  //! Constructor from uint8_t array
+  SHA256Hash(const uint8_t * const bytes);
 
   //! Operator to offer convenient buffer access.
   uint8_t &operator[](const uint8_t i) { return buff[i]; }
