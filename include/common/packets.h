@@ -11,6 +11,7 @@
 
 namespace sc2tm {
 
+//! Base class for all packets.
 struct Packet {
   //! Transforms the packet into data appropriate for sending over the network.
   /**

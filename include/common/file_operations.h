@@ -15,10 +15,13 @@ namespace fs = std::experimental::filesystem;
 
 namespace sc2tm {
 
+//! Convenience typedef for mapping a file to a SHA256 hash.
 typedef std::map<fs::path, SHA256Hash::ptr> SHAFileMap;
 
-bool hashMapDirectory(std::string filepath, SHAFileMap &map);
+//! Hash all .so files in a directory.
 bool hashBotDirectory(std::string filepath, SHAFileMap &map);
+//! Hash all .SC2Map files in a directory.
+bool hashMapDirectory(std::string filepath, SHAFileMap &map);
 
 } // End sc2tm namespace
 

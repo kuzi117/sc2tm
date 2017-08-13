@@ -12,6 +12,11 @@ using boost::asio::ip::tcp;
 
 namespace sc2tm {
 
+//! Represents a server that clients connect to.
+/**
+ * Represents a server that clients connect to. Handles organizing games, distributing them to
+ * clients to play, and aggregating the results.
+ */
 class Server {
   //! The TCP acceptor.
   tcp::acceptor acceptor;

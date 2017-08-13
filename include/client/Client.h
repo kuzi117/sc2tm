@@ -10,6 +10,7 @@ using boost::asio::ip::tcp;
 
 namespace sc2tm {
 
+//! Represents a client that connects to a server.
 class Client {
   //! The map for maps that are involved in this run.
   /**
