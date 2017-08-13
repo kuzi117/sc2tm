@@ -208,11 +208,11 @@ std::ostream &operator<<(std::ostream &os, const SHA256Hash &hash) {
     oldFormat.copyfmt(os);
 
     // Set up formatting
-    os << std::setfill('0') << std::setw(2) << std::hex;
+    os << std::setfill('0') << std::hex;
 
     // Do our printing
     for (int i = 0;i < SHA256::DIGEST_SIZE; i++)
-      os << (int) hash[i];
+      os << std::setw(2) << (int) hash[i];
 
     // Restore formatting
     os.copyfmt(oldFormat);
