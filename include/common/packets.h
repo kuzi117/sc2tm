@@ -109,7 +109,7 @@ struct PregameCommandPacket : Packet {
   //! Construct a PregameCommandPacket from a command.
   PregameCommandPacket(PregameCommand cmd) : cmd(cmd) { }
 
-  //! Construct a handshake from the bytes in a buffer.
+  //! Construct a PregameCommandPacket from the bytes in a buffer.
   PregameCommandPacket(boost::asio::streambuf &buffer) : cmd() { fromBuffer(buffer); }
 
   //! Converts this packet into data appropriate for sending over the network.
@@ -126,9 +126,26 @@ enum PregameDisconnectReason : uint8_t {
   NO_GAMES
 };
 
-//! Represents a
+//! All data required for a pregame disconnect packet
 struct PregameDisconnectPacket : Packet {
+  //! The disconnect reason
   PregameDisconnectReason reason;
+
+  //! No default constructor.
+  PregameDisconnectPacket() = delete;
+
+  //! Construct a PregameDisconnectPacket from a command.
+  PregameDisconnectPacket(PregameDisconnectReason reason) : reason(reason) { }
+
+  //! Construct a PregameDisconnectPacket from the bytes in a buffer.
+  PregameDisconnectPacket(boost::asio::streambuf &buffer) : reason() { fromBuffer(buffer); }
+
+  //! Converts this packet into data appropriate for sending over the network.
+  virtual void toBuffer(boost::asio::streambuf &buffer) override;
+
+protected:
+  //! Fill this packet from the bytes in a buffer.
+  virtual void fromBuffer(boost::asio::streambuf &buffer) override;
 };
 
 } // End sc2tm namespace

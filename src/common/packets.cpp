@@ -115,7 +115,7 @@ void sc2tm::ClientHandshakePacket::fromBuffer(boost::asio::streambuf &buffer) {
   }
 }
 
-// --- PreGamePacket
+// --- PregameCommandPacket
 void sc2tm::PregameCommandPacket::toBuffer(boost::asio::streambuf &buffer) {
   // Create an ostream from the buffer
   std::ostream os(&buffer);
@@ -132,4 +132,23 @@ void sc2tm::PregameCommandPacket::fromBuffer(boost::asio::streambuf &buffer) {
   uint8_t buffCmd;
   is >> buffCmd;
   cmd = static_cast<PregameCommand>(buffCmd);
+}
+
+// --- PregameDisconnectPacket
+void sc2tm::PregameDisconnectPacket::toBuffer(boost::asio::streambuf &buffer) {
+  // Create an ostream from the buffer
+  std::ostream os(&buffer);
+
+  // Write the command to the buffer.
+  os << reason;
+}
+
+void sc2tm::PregameDisconnectPacket::fromBuffer(boost::asio::streambuf &buffer) {
+  // Create an istream from the buffer
+  std::istream is(&buffer);
+
+  // Read the command from the buffer
+  uint8_t buffReason;
+  is >> buffReason;
+  reason = static_cast<PregameDisconnectReason>(buffReason);
 }
