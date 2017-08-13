@@ -15,6 +15,6 @@ public:
 private:
 };
 
-}
+} // End sc2tm namespace
 
 #endif //SC2TM_SERVEROPTS_H

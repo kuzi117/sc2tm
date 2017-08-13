@@ -20,6 +20,6 @@ typedef std::map<fs::path, SHA256Hash::ptr> SHAFileMap;
 bool hashMapDirectory(std::string filepath, SHAFileMap &map);
 bool hashBotDirectory(std::string filepath, SHAFileMap &map);
 
-}
+} // End sc2tm namespace
 
 #endif //SC2TM_FILE_OPERATIONS_H
