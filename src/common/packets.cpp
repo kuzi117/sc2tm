@@ -41,7 +41,7 @@ sc2tm::ClientHandshakePacket::ClientHandshakePacket(boost::asio::streambuf &buff
   fromBuffer(buffer);
 };
 
-void sc2tm::ClientHandshakePacket::toBuffer(boost::asio::streambuf &buff) {
+void sc2tm::ClientHandshakePacket::toBuffer(boost::asio::streambuf &buffer) {
   // Sanity checking
   for (const auto &hash : botHashes)
     assert(hash.size() == SHA256::DIGEST_SIZE);
@@ -58,7 +58,7 @@ void sc2tm::ClientHandshakePacket::toBuffer(boost::asio::streambuf &buff) {
   std::cout << "PREDICTED CONSTRUCTED PACKET SIZE: " << size << "\n"; // TODO DEBUG
 
   // Create an ostream from the buffer
-  std::ostream os(&buff);
+  std::ostream os(&buffer);
 
   // Write size to buffer. Note that we're writing size *and* data in the same step. It makes
   // no difference to the server when it receives the data, just that it listens for the correct
@@ -113,4 +113,23 @@ void sc2tm::ClientHandshakePacket::fromBuffer(boost::asio::streambuf &buffer) {
     readHashBuffer(digest.data(), is);
     mapHashes.push_back(digest);
   }
+}
+
+// --- PreGamePacket
+void sc2tm::PregameCommandPacket::toBuffer(boost::asio::streambuf &buffer) {
+  // Create an ostream from the buffer
+  std::ostream os(&buffer);
+
+  // Write the command to the buffer.
+  os << cmd;
+}
+
+void sc2tm::PregameCommandPacket::fromBuffer(boost::asio::streambuf &buffer) {
+  // Create an istream from the buffer
+  std::istream is(&buffer);
+
+  // Read the command from the buffer
+  uint8_t buffCmd;
+  is >> buffCmd;
+  cmd = static_cast<PregameCommand>(buffCmd);
 }

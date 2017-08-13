@@ -53,6 +53,9 @@ struct ClientHandshakePacket : Packet {
   //! Array of map hashes
   std::vector<std::vector<uint8_t>> mapHashes;
 
+  //! No default constructor.
+  ClientHandshakePacket() = delete;
+
   //! Construct a handshake packet.
   /**
    * Construct a handshake packet, initializing the version numbers and copying hashes.
@@ -61,6 +64,9 @@ struct ClientHandshakePacket : Packet {
    * @param mapMap The maps that need to be included.
    */
   ClientHandshakePacket(const SHAFileMap &botMap, const SHAFileMap &mapMap);
+
+  //! Construct a handshake from the bytes in a buffer.
+  ClientHandshakePacket(boost::asio::streambuf &buffer);
 
   //! Converts this packet into data appropriate for sending over the network.
   /**
@@ -73,12 +79,6 @@ struct ClientHandshakePacket : Packet {
    */
   virtual void toBuffer(boost::asio::streambuf &buffer) override;
 
-  //! Construct a handshake from the bytes in a buffer.
-  /**
-   * Construct an invalid handshake that is intended to be filled in by fromBuffer.
-   */
-  ClientHandshakePacket(boost::asio::streambuf &buffer);
-
 protected:
   //! Fill this packet from the bytes in a buffer.
   /**
@@ -89,13 +89,46 @@ protected:
    * @param buffer The buffer to construct from.
    */
   virtual void fromBuffer(boost::asio::streambuf &buffer) override;
-
 };
 
 // --- PreGamePacket
+//! Represents all possible pregame commands
 enum PregameCommand : uint8_t {
   DISCONNECT = 0,
   START_GAME
+};
+
+//! All data required for a pregame command packet.
+struct PregameCommandPacket : Packet {
+  //! The pregame command.
+  PregameCommand cmd;
+
+  //! No default constructor.
+  PregameCommandPacket() = delete;
+
+  //! Construct a PregameCommandPacket from a command.
+  PregameCommandPacket(PregameCommand cmd) : cmd(cmd) { }
+
+  //! Construct a handshake from the bytes in a buffer.
+  PregameCommandPacket(boost::asio::streambuf &buffer) : cmd() { fromBuffer(buffer); }
+
+  //! Converts this packet into data appropriate for sending over the network.
+  virtual void toBuffer(boost::asio::streambuf &buffer) override;
+
+protected:
+  //! Fill this packet from the bytes in a buffer.
+  virtual void fromBuffer(boost::asio::streambuf &buffer) override;
+};
+
+//! Represents all possible reasons for disconnecting pregame.
+enum PregameDisconnectReason : uint8_t {
+  BAD_VERSION = 0,
+  NO_GAMES
+};
+
+//! Represents a
+struct PregameDisconnectPacket : Packet {
+  PregameDisconnectReason reason;
 };
 
 } // End sc2tm namespace
