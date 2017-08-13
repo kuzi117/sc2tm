@@ -1,6 +1,9 @@
 #ifndef SC2TM_SERVER_INFO_H
 #define SC2TM_SERVER_INFO_H
 
+#include <cstdint>
+#include <string>
+
 namespace sc2tm {
 
 // Create server version

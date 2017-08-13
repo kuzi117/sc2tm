@@ -1,9 +1,9 @@
 #ifndef SC2TM_CONNECTION_H
 #define SC2TM_CONNECTION_H
 
-#include <memory>
-
 #include <boost/asio.hpp>
+
+#include <memory>
 
 using namespace boost;
 using boost::asio::ip::tcp;

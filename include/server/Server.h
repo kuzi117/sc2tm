@@ -1,11 +1,11 @@
 #ifndef SC2TM_SERVER_H
 #define SC2TM_SERVER_H
 
-#include <boost/asio.hpp>
-
 #include "common/config.h"
 #include "common/file_operations.h"
 #include "server/Connection.h"
+
+#include <boost/asio.hpp>
 
 using namespace boost;
 using boost::asio::ip::tcp;

@@ -1,15 +1,17 @@
 #ifndef SC2TM_FILE_OPERATIONS_H
 #define SC2TM_FILE_OPERATIONS_H
 
-#include <map>
+#include "common/sha256.h"
+
 #include <experimental/filesystem>
+#include <map>
+
 // Windows has some extra filesystem header..
 // https://docs.microsoft.com/en-us/cpp/standard-library/filesystem
 #ifdef _WIN32
 #include <filesystem>
 #endif
 
-#include "common/sha256.h"
 
 namespace fs = std::experimental::filesystem;
 

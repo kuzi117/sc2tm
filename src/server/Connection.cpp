@@ -1,9 +1,10 @@
 #include "server/Connection.h"
 
-#include <iostream>
-#include <common/packets.h>
-
 #include "common/buffer_operations.h"
+#include "common/packets.h"
+
+#include <iostream>
+
 
 sc2tm::Connection::~Connection() {
   std::cout << "CONNECTION DYING\n";

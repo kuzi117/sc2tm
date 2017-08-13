@@ -1,9 +1,8 @@
 #include "client/Client.h"
 
-#include <iostream>
-
 #include "common/packets.h"
 
+#include <iostream>
 
 sc2tm::Client::Client(asio::io_service &service, std::string host, std::string port,
                       std::string botDir, std::string mapDir) :

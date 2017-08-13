@@ -1,13 +1,12 @@
 #ifndef SC2TM_PACKETS_H
 #define SC2TM_PACKETS_H
 
-#include <vector>
-
-#include <boost/asio/streambuf.hpp>
-
 #include "common/file_operations.h"
 #include "common/sha256.h"
 
+#include <boost/asio/streambuf.hpp>
+
+#include <vector>
 
 namespace sc2tm {
 

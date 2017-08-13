@@ -1,11 +1,11 @@
-#include <fstream>
-
-#include <boost/iterator/filter_iterator.hpp>
-#include <cassert>
-#include <iostream>
-
 #include "common/file_operations.h"
 #include "common/sha256.h"
+
+#include <boost/iterator/filter_iterator.hpp>
+
+#include <cassert>
+#include <fstream>
+#include <iostream>
 
 namespace {
 

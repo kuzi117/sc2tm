@@ -1,8 +1,8 @@
 #ifndef SC2TM_CLOPTS_H
 #define SC2TM_CLOPTS_H
 
-#include <string>
 #include <map>
+#include <string>
 
 namespace sc2tm {
 

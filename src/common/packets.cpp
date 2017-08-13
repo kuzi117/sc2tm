@@ -1,12 +1,13 @@
 #include "common/packets.h"
 
+#include "common/config.h"
+#include "common/buffer_operations.h"
+
 #include <arpa/inet.h>
 #include <cassert>
 #include <cstring>
 #include <iostream>
 
-#include "common/config.h"
-#include "common/buffer_operations.h"
 
 // --- ClientHandshakePacket
 sc2tm::ClientHandshakePacket::ClientHandshakePacket(const SHAFileMap &botMap,

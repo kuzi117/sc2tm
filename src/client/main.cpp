@@ -1,11 +1,10 @@
-#include <iostream>
-
-#include <boost/asio.hpp>
-
-
 #include "client/Client.h"
 #include "common/CLOpts.h"
 #include "common/config.h"
+
+#include <boost/asio.hpp>
+
+#include <iostream>
 
 // Shorten the crazy long namespacing to asio tcp
 using boost::asio::ip::tcp;
