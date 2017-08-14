@@ -36,6 +36,10 @@ const short serverPort = 5122;
 //! The server port as a string.
 const std::string serverPortStr = std::to_string(serverPort);
 
+// Tournament config
+//! The number of games on each map.
+const uint32_t numGames = 5;
+
 } // End namespace sc2tm
 
 #endif //SC2TM_SERVER_INFO_H
