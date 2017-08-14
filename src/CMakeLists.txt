@@ -17,6 +17,7 @@ set(
   server_src
     server/main.cpp
     server/Connection.cpp
+    server/GameGenerator.cpp
     server/Server.cpp
 )
 
