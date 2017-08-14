@@ -2,17 +2,16 @@
 
 #include <iostream>
 
-sc2tm::Server::Server(asio::io_service &service, std::string botDir, std::string mapDir) :
+sc2tm::Server::Server(asio::io_service &service, const std::string &botDir,
+                      const std::string &mapDir) :
     acceptor(service, tcp::endpoint(tcp::v4(), serverPort)) {
+  // Generate our directory hashes
+  // TODO do these really need to map from file to hash on the server? Not really...
   hashBotDirectory(botDir, botMap);
   hashMapDirectory(mapDir, mapMap);
 
-  // TODO DEBUG
-  for (const auto &info : botMap)
-    std::cout << info.second << " - " << info.first.filename().string()  << "\n";
-
-  for (const auto &info : mapMap)
-    std::cout << info.second << " - " << info.first.filename().string()  << "\n";
+  // Initialize the generator
+  gen = GameGenerator(botMap, mapMap);
 
   startAccept();
 }

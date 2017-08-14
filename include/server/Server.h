@@ -4,6 +4,7 @@
 #include "common/config.h"
 #include "common/file_operations.h"
 #include "server/Connection.h"
+#include "server/GameGenerator.h"
 
 #include <boost/asio.hpp>
 
@@ -58,6 +59,9 @@ class Server {
   //! Lock for editing the list of active connections.
   std::mutex connMutex;
 
+  //! The game generator.
+  GameGenerator gen;
+
 public:
   //! Construct a server.
   /**
@@ -67,7 +71,7 @@ public:
    * @param botDir The directory where the bots are located.
    * @param mapDir The directory where the maps are located.
    */
-  Server(asio::io_service &service, std::string botDir, std::string mapDir);
+  Server(asio::io_service &service, const std::string &botDir, const std::string &mapDir);
 
   //! Declare Connection as a friend class.
   /**
