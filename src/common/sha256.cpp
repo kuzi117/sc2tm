@@ -157,7 +157,7 @@ void SHA256::final(unsigned char *digest)
 SHA256Hash::ptr sha256(std::ifstream &file)
 {
     // Construct our digest
-    SHA256Hash::ptr digest = std::make_unique<SHA256Hash>();
+    SHA256Hash::ptr digest = std::make_shared<SHA256Hash>();
 
     // get length of file:
     file.seekg (0, file.end);
@@ -197,6 +197,13 @@ SHA256Hash::ptr sha256(std::ifstream &file)
 
 SHA256Hash::SHA256Hash(const uint8_t * const bytes) : buff() {
     std::memcpy(buff, bytes, SHA256::DIGEST_SIZE);
+}
+
+int SHA256Hash::compare(const SHA256Hash &hash1, const SHA256Hash &hash2) {
+  for (int i = 0; i < SHA256::DIGEST_SIZE; ++i)
+    if (hash1.buff[i] != hash2.buff[i])
+      return hash1.buff[i] < hash2.buff[i] ? -1 : 1;
+  return 0;
 }
 
 // Delegate to the version that prints references

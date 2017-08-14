@@ -46,6 +46,8 @@
 //   - added ostream overloads for printing SHA256Hash
 
 #include <memory>
+#include <set>
+
 
 class SHA256
 {
@@ -76,7 +78,7 @@ class SHA256Hash {
   uint8_t buff[SHA256::DIGEST_SIZE];
 public:
   //! Pointer to a hash.
-  typedef std::unique_ptr<SHA256Hash> ptr;
+  typedef std::shared_ptr<SHA256Hash> ptr;
 
   //! Default constructor.
   SHA256Hash() : buff() { }
@@ -92,7 +94,27 @@ public:
 
   //! Offers access to the underlying digest.
   uint8_t *get() { return (uint8_t *) &buff; }
+
+  //! Compare function for SHA256hashes.
+  static int compare(const SHA256Hash &hash1, const SHA256Hash &hash2);
+
+  //! Convenience compare between two ptrs.
+  static int compare(const ptr &hash1, const ptr &hash2) { compare(*hash1, *hash2); }
+
+public:
 };
+
+struct CompareHashPtrFtor {
+  int operator()(const SHA256Hash::ptr p0, const SHA256Hash::ptr p1) const {
+    return SHA256Hash::compare(p0, p1);
+  }
+};
+
+//! A set of hashes.
+/**
+ * A set of hashes. Ensures that the underlying hashes are unique rather than the pointers.
+ */
+typedef std::set<SHA256Hash::ptr, CompareHashPtrFtor> HashSet;
 
 //! Generates a pointer to SHA256Hash from a file.
 SHA256Hash::ptr sha256(std::ifstream &file);
