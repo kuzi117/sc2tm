@@ -12,6 +12,7 @@ namespace sc2tm {
  * This is part of an effort to reduce the amount of Game objects in memory due to the factorial
  * growth rate when adding more bots, more maps, and more games played.
  */
+// TODO TEST THE SHIT OUT OF THIS THING
 class GameGenerator {
   //! The set of bots we have to work with.
   HashSet bots;
@@ -41,7 +42,7 @@ class GameGenerator {
     GameCounter() = delete;
 
     //! Construct a game counter with a given number of games to play.
-    GameCounter(uint32_t games) : left(game), done(games) { }
+    GameCounter(uint32_t games) : left(games), done(games) { }
   };
 
   //! A bot matchup.

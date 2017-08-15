@@ -3,6 +3,7 @@
 #include "common/config.h"
 
 #include <algorithm>
+#include <cassert>
 
 sc2tm::GameGenerator::GameGenerator(const SHAFileMap &botMap, const SHAFileMap &mapMap) {
   for (auto it : botMap)
@@ -33,7 +34,7 @@ bool sc2tm::GameGenerator::generateGame(Game &game, HashSet cBots, HashSet cMaps
 
   // If there's not enough bots for a matchup or a single map to play on then there's no games
   // to give out for this client.
-  if (botInter.size() < 2 || mapInter.size() == 0)
+  if (botInter.size() < 2 || mapInter.empty())
     return false;
 
   // Do we ever succeed?
@@ -66,7 +67,7 @@ bool sc2tm::GameGenerator::generateActiveMap(Game &game, HashSet cBots, HashSet 
       // If we found a matchup we need to find an active map that we also have in common
       if (activePairIt != active.end()) {
         for (const auto &map : cMaps) {
-          const CounterMap &activeMaps = activePairIt->second;
+          CounterMap &activeMaps = activePairIt->second;
 
           // Try to find the map in the counter map that still has games left
           auto counterIt = activeMaps.find(map);
@@ -92,64 +93,89 @@ bool sc2tm::GameGenerator::generateActiveMap(Game &game, HashSet cBots, HashSet 
   return false;
 }
 
+//
 bool sc2tm::GameGenerator::generateActiveMatchup(Game &game, HashSet cBots, HashSet cMaps) {
   for (auto botIt0 = cBots.begin(), end0 = std::prev(cBots.end()); botIt0 != end0; ++botIt0) {
     for (auto botIt1 = std::next(botIt0), end1 = cBots.end(); botIt1 != end1; ++botIt1) {
-      // Make the matchup and try to find it in the map
-      Matchup m(*botIt0, *botIt1);
-      auto activePairIt = active.find(m);
+      // Make the matchup
+      Matchup matchup(*botIt0, *botIt1);
 
-      // If we found a matchup we need to create a set of maps that we could schedule on
+      // Find the match up in the active and finished sets
+      auto activePairIt = active.find(matchup);
+      auto finishedIt = finished.find(matchup);
+
+      // If the match up wasn't in either set then move on because it has never been scheduled
+      // before
+      if (activePairIt == active.end() && finishedIt != finished.end())
+        continue;
+
+      // If we found an active matchup we subtract the set of currently active maps from the set
+      // of usable maps. This may seem like an odd thing to do because getting into this function
+      // means that we were unable to find an active map to participate in, but this could just
+      // mean that there's an active map with all instances currently sent out.
       if (activePairIt != active.end()) {
-        // Build a set of active
+        // Build a set of active maps
         HashSet activeMaps;
         for (const auto &pair : activePairIt->second)
           activeMaps.insert(pair.first);
 
-        // Generate the set of maps that aren't currently active. This may seem odd, because we just
-        // determined that there was no map that we could participate in, but there might still be
-        // an active map that we have in common (no more plays left)
+        // Subtract active maps from the set of all maps
         HashSet nonActiveMaps;
-        std::set_difference(maps.begin(), maps.end(),
+        std::set_difference(cMaps.begin(), cMaps.end(),
                             activeMaps.begin(), activeMaps.end(),
                             std::inserter(nonActiveMaps, nonActiveMaps.end()),
                             CompareHashPtrFtor());
 
-        // Container for usable maps, will be filled in the next step
-        HashSet usableMaps;
-
-        // Try to find this match up in the finished map, if we find it, do another set subtraction
-        auto finishedIt = finished.find(m);
-        if (finishedIt != finished.end()) {
-          const HashSet &finishedMaps = finishedIt->second;
-          std::set_difference(nonActiveMaps.begin(), nonActiveMaps.end(),
-                              activeMaps.begin(), activeMaps.end(),
-                              std::inserter(usableMaps, usableMaps.end()),
-                              CompareHashPtrFtor());
-        }
-          // Otherwise just put the nonActiveMaps in
-        else
-          usableMaps = nonActiveMaps;
-
-        // If we don't have any usable maps, just move onto another matchup
-        if (usableMaps.empty())
-          continue;
-
-        // Good new everyone! We found a usable map!
-        // Put it in the schedule and then send the game off.
-        SHA256Hash::ptr map = *usableMaps.begin();
-        // TODO maybe get the game count from a game generator arg
-        active[m][map] = GameCounter(numGames);
-        --active[m][map].left; // Pop off the first game
-
-        // Fill the game in
-        game.bot0 = *botIt0;
-        game.bot1 = *botIt1;
-        game.map = map;
-
-        // Tell them of our successes
-        return true;
+        // Assign this resulting set over cMaps for use by the next section if there's games in the
+        // finished map or straight by the generator in the final section
+        cMaps = nonActiveMaps;
       }
+
+      // If we found the matchup in the finished set then we should subtract these maps from the
+      // usable map set
+      if (finishedIt != finished.end()) {
+        // The set of maps that are finished for this match up
+        const HashSet &finishedMaps = finishedIt->second;
+
+        // Subtract finished maps from set of all maps
+        HashSet nonFinishedMaps;
+        std::set_difference(cMaps.begin(), cMaps.end(),
+                            finishedMaps.begin(), finishedMaps.end(),
+                            std::inserter(nonFinishedMaps, nonFinishedMaps.end()),
+                            CompareHashPtrFtor());
+
+        // Assign this resulting set over cMaps for use by the next section
+        cMaps = nonFinishedMaps;
+      }
+
+      // If we don't have any usable maps, just move onto another matchup
+      if (cMaps.empty())
+        continue;
+
+      // Good new everyone! We found a usable map!
+      // Put it in the schedule and then send the game off.
+      // Get the map we're going to schedule.
+      SHA256Hash::ptr map = *cMaps.begin();
+
+      // Ensure that we haven't screwed up and are trying to schedule a map that is already
+      // scheduled
+      assert(active[matchup].find(map) == active[matchup].end());
+
+      // TODO maybe get the game count from a game generator arg
+      // Put a new game counter in and take a game away.
+      // Note that we can't use the CounterMap's operator[] because it requires the value type
+      // to have a default constructor. Find still works fine.
+      GameCounter counter(numGames);
+      --counter.left;
+      active[matchup].emplace(map, counter);
+
+      // Fill the game in
+      game.bot0 = *botIt0;
+      game.bot1 = *botIt1;
+      game.map = map;
+
+      // Tell them of our successes
+      return true;
     }
   }
 
