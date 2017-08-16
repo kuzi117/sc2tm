@@ -17,6 +17,17 @@ sc2tm::GameGenerator::Matchup::Matchup(SHA256Hash::ptr b0, SHA256Hash::ptr b1) :
     bot0(SHA256Hash::compare(b0, b1) > 0 ? b0 : b1),
     bot1(SHA256Hash::compare(b0, b1) > 0 ? b1 : b0) { }
 
+bool sc2tm::GameGenerator::Matchup::contains(const SHA256Hash::ptr bot) const {
+  return SHA256Hash::compare(bot, bot0) == 0 || SHA256Hash::compare(bot, bot1) == 0;
+}
+
+uint8_t sc2tm::GameGenerator::Matchup::indexOf(const SHA256Hash::ptr bot) const {
+  assert(contains(bot));
+  if (SHA256Hash::compare(bot, bot0) == 0)
+    return 0;
+  return 1;
+}
+
 
 // TODO We need to lock this when multithreading happens
 bool sc2tm::GameGenerator::generateGame(Game &game, HashSet cBots, HashSet cMaps){
@@ -244,4 +255,141 @@ bool sc2tm::GameGenerator::generateNewMatchup(Game &game, HashSet cBots, HashSet
       return true;
     }
   }
+}
+
+// TODO We need to lock this when multithreading happens
+// This is fairly easy to begin with, just decrement the done counter for the matchup and map.
+// However, if we find that done has hit zero we need to move the map to the finished list. Further,
+// if a bot has competed against every bot and finished every map then it should be moved to the
+// finishedBots set.
+void sc2tm::GameGenerator::notifySuccess(const Game &game) {
+  Matchup matchup(game.bot0, game.bot1);
+
+  // Find the matchup/CounterMap pair in the map
+  auto activeIt = active.find(matchup);
+  assert(activeIt != active.end()); // If it's failing, it must be active
+
+  // Find the map/GameCounter pair in the map
+  auto &counterMap = activeIt->second;
+  auto counterIt = counterMap.find(game.map);
+  assert(counterIt != counterMap.end());
+
+  // If the left counter is greater than one then all we need to do is decrement and move on
+  if (counterIt->second.done > 1) {
+    --counterIt->second.done;
+    return;
+  }
+
+  // But if it is one (or zero, but that should never happen because it should've been removed) then
+  // we need to move this map to the finished map
+  // It shouldn't have ended before
+  assert(finished[matchup].find(game.map) == finished[matchup].end());
+  finished[matchup].insert(game.map);
+
+  // Remove it from the active map. We can use the iterator here to save the map having to find it
+  // again.
+  counterMap.erase(counterIt);
+
+  // Now we begin the process of checking if one of the bots is done. This is kind of complicated.
+  // Either or both of the bots could be "done". Build sets of the bots that each bot is done
+  // (i.e. played every map) against. Because this is such a long process, we're going to try and
+  // leave at every opportunity.
+  HashSet bot0Done; // The set of bots that bot0 has finished against
+  HashSet bot1Done; // The set of bots that bot1 has finished against
+  bool bot0Fail = false; // Whether or not bot0 has already failed to be "done"
+  bool bot1Fail = false; // Whether or not bot1 has already failed to be "done"
+  for (const auto &finishedPair : finished) {
+    const Matchup &finishedMatchup = finishedPair.first;
+    const HashSet &finishedMaps = finishedPair.second;
+
+    // First check if this bot already failed, then check if bot0 was either of the bots in this
+    // matchup
+    if (!bot0Fail && finishedMatchup.contains(game.bot0)) {
+      // We check size here rather than comparing values. I'm fairly certain that we can't "finish"
+      // a map that the GameGenerator doesn't have. If we have the same number of maps then this
+      // matchup is "done"
+      // TODO Add some debug only code that does per element comparison rather than size comparison
+      if (finishedMaps.size() == maps.size())
+        bot0Done.insert(finishedMatchup.indexOf(game.bot0) == 0 ?
+                        finishedMatchup.bot1 : finishedMatchup.bot0);
+      // We found a matchup that isn't done and don't need to keep checking
+      else
+        bot0Fail = true;
+    }
+
+    // Check if bot1 was either of the bots in this matchup
+    if (!bot1Fail && finishedMatchup.contains(game.bot1)) {
+      // We check size here rather than comparing values. I'm fairly certain that we can't "finish"
+      // a map that the GameGenerator doesn't have. If we have the same number of maps then this
+      // matchup is "done"
+      // TODO Add some debug only code that does per element comparison rather than size comparison
+      if (finishedMaps.size() == maps.size())
+        bot1Done.insert(finishedMatchup.indexOf(game.bot1) == 0 ?
+                        finishedMatchup.bot0 : finishedMatchup.bot1);
+      // We found a matchup that isn't done and don't need to keep checking
+      else
+        bot1Fail = true;
+    }
+
+    // Both bots failed to be done, just leave
+    if (bot0Fail && bot1Fail)
+      return;
+  }
+
+  // So we get here meaning that one of the bots had all of their matchups "done", but that doesn't
+  // mean they had *all* matchups. Better check that..
+  if (!bot0Fail)
+    bot0Fail = bot0Done.size() == (bots.size() - 1); // -1 for self
+
+  if (!bot1Fail)
+    bot1Fail = bot1Done.size() == (bots.size() - 1); // -1 for self
+
+  // Both bots fail, we can leave now
+  if (bot0Fail && bot1Fail)
+    return;
+
+  // Getting here means that one of the bots is actually done. That means we need to clean it out of
+  // the other two maps and add it to the finishedBots.
+  // Check if either of them passed. If they did, add them to the finished set
+  if (!bot0Fail)
+    finishedBots.insert(game.bot0);
+  if (!bot1Fail)
+    finishedBots.insert(game.bot1);
+
+  // Now generate every matchup and remove it from the active/finished maps
+  for (const auto &bot : bots) {
+    // If we didn't fail and this isn't a self matchup, clear it out
+    if (!bot0Fail && SHA256Hash::compare(game.bot0, bot) != 0) {
+      // Delete this matchup
+      Matchup purgeable(game.bot0, bot);
+      active.erase(purgeable);
+      finished.erase(purgeable);
+    }
+
+    if (!bot1Fail && SHA256Hash::compare(game.bot1, bot) != 0) {
+      // Delete this matchup
+      Matchup purgeable(game.bot1, bot);
+      active.erase(purgeable);
+      finished.erase(purgeable);
+    }
+  }
+}
+
+// TODO We need to lock this when multithreading happens
+// This is actually fairly easy, just make up the matchup and use the map to get the counter so
+// that we can increment the left counter
+void sc2tm::GameGenerator::notifyFail(const Game &game) {
+  Matchup matchup(game.bot0, game.bot1);
+
+  // Find the matchup/CounterMap pair in the map
+  auto activeIt = active.find(matchup);
+  assert(activeIt != active.end()); // If it's failing, it must be active
+
+  // Find the map/GameCounter pair in the map
+  auto &counterMap = activeIt->second;
+  auto counterIt = counterMap.find(game.map);
+  assert(counterIt != counterMap.end());
+
+  // Increment the left count
+  ++counterIt->second.left;
 }

@@ -6,13 +6,17 @@
 #include "common/sha256.h"
 
 namespace sc2tm {
+// TODO TEST THE SHIT OUT OF THIS THING
+// Client has same maps/bots as us
+// Client has a subset of our maps/bots
+// Client has a superset of our maps/bots
+// Client's set of maps/bots intersects with ours but isn't a superset or subset
 
 //! Object that manages generating games to be played.
 /**
  * This is part of an effort to reduce the amount of Game objects in memory due to the factorial
  * growth rate when adding more bots, more maps, and more games played.
  */
-// TODO TEST THE SHIT OUT OF THIS THING
 class GameGenerator {
   //! The set of bots we have to work with.
   HashSet bots;
@@ -60,6 +64,12 @@ class GameGenerator {
 
     //! Construct a matchup from two bots.
     Matchup(SHA256Hash::ptr bot0, SHA256Hash::ptr bot1);
+
+    //! Does this matchup contain the bot?
+    bool contains(const SHA256Hash::ptr bot) const;
+
+    //! Index of the bot in this matchup.
+    uint8_t indexOf(const SHA256Hash::ptr bot) const;
   };
 
   //! Functor to order matchups.
@@ -138,6 +148,26 @@ public:
    * @return True if a game was found, false otherwise.
    */
   bool generateGame(Game &game, HashSet cBots, HashSet cMaps);
+
+  //! Notify the generator that a game completed successfully.
+  /**
+   * Notify the generator that a game completed successfully. This will commit the game as done and
+   * remove it from the in progress state. This function will also try to commit maps as done for a
+   * matchup and bots as done entirely if they've competed against every other bot on every map the
+   * requisite number of times.
+   *
+   * @param game The game that completed successfully.
+   */
+  void notifySuccess(const Game &game);
+
+  //! Notify the generator that a game did not complete successfully.
+  /**
+   * Notify the generator that a game did not complete successfully. This game will be added back
+   * into the pool of games to be rescheduled to another client.
+   *
+   * @param game The game that did not complete successfully.
+   */
+  void notifyFail(const Game &game);
 
 private:
   //! Try to generate a game for a client from an active matchup and map.
