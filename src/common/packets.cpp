@@ -153,3 +153,44 @@ void sc2tm::PregameDisconnectPacket::fromBuffer(boost::asio::streambuf &buffer) 
   is >> buffReason;
   reason = static_cast<PregameDisconnectReason>(buffReason);
 }
+
+// --- StartGamePacket
+void sc2tm::StartGamePacket::toBuffer(boost::asio::streambuf &buffer) {
+  // Create an ostream from the buffer
+  std::ostream os(&buffer);
+
+  // Write the two bots and the map
+  writeHashBuffer(game.bot0->get(), os);
+  writeHashBuffer(game.bot1->get(), os);
+  writeHashBuffer(game.map->get(), os);
+}
+
+void sc2tm::StartGamePacket::fromBuffer(boost::asio::streambuf &buffer) {
+  // Create an istream from the buffer
+  std::istream is(&buffer);
+
+  // Read the two bots and the map
+  readHashBuffer(game.bot0->get(), is);
+  readHashBuffer(game.bot1->get(), is);
+  readHashBuffer(game.map->get(), is);
+}
+
+// --- GameStatusPacket
+void sc2tm::GameStatusPacket::toBuffer(boost::asio::streambuf &buffer) {
+  // Create an ostream from the buffer
+  std::ostream os(&buffer);
+  std::cout << "SENDING STATUS: " << status << '\n';
+
+  // Write the status to the buffer.
+  os << static_cast<uint8_t>(status);
+}
+
+void sc2tm::GameStatusPacket::fromBuffer(boost::asio::streambuf &buffer) {
+  // Create an istream from the buffer
+  std::istream is(&buffer);
+
+  // Read the status from the buffer
+  uint8_t buffCmd;
+  is >> buffCmd;
+  status = static_cast<GameStatus>(buffCmd);
+}

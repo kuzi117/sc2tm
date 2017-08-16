@@ -2,6 +2,7 @@
 #define SC2TM_PACKETS_H
 
 #include "common/file_operations.h"
+#include "common/Game.h"
 #include "common/sha256.h"
 
 #include <boost/asio/streambuf.hpp>
@@ -10,6 +11,8 @@
 
 namespace sc2tm {
 
+// It might be possible to move the streambuf constructor to this so not every packet has to define
+// it
 //! Base class for all packets.
 struct Packet {
   //! Transforms the packet into data appropriate for sending over the network.
@@ -146,6 +149,58 @@ struct PregameDisconnectPacket : Packet {
 protected:
   //! Fill this packet from the bytes in a buffer.
   virtual void fromBuffer(boost::asio::streambuf &buffer) override;
+};
+
+//! All data required for scheduling a new game.
+struct StartGamePacket : Packet {
+  //! The game to send to the client.
+  Game game;
+
+  //! No default constructor.
+  StartGamePacket() = delete;
+
+  //! Construct a StartGamePacket from a game.
+  StartGamePacket(Game game) : game(game) { }
+
+  //! Construct a PregameDisconnectPacket from the bytes in a buffer.
+  StartGamePacket(boost::asio::streambuf &buffer) : game() { fromBuffer(buffer); }
+
+  //! Converts this packet into data appropriate for sending over the network.
+  virtual void toBuffer(boost::asio::streambuf &buffer) override;
+
+protected:
+  //! Fill this packet from the bytes in a buffer.
+  virtual void fromBuffer(boost::asio::streambuf &buffer) override;
+
+};
+
+//! Represents all possible status codes of a game finishing.
+enum GameStatus : uint8_t {
+  SUCCESS = 0,
+  FAILURE
+};
+
+//! All data required for a game status packet.
+struct GameStatusPacket : Packet {
+  //! The status of the game.
+  GameStatus status;
+
+  //! No default constructor.
+  GameStatusPacket() = delete;
+
+  //! Construct a GameStatusPacket from a status code.
+  GameStatusPacket(GameStatus status) : status(status) { }
+
+  //! Construct a GameStatusPacket from the bytes in a buffer.
+  GameStatusPacket(boost::asio::streambuf &buffer) : status() { fromBuffer(buffer); }
+
+  //! Converts this packet into data appropriate for sending over the network.
+  virtual void toBuffer(boost::asio::streambuf &buffer) override;
+
+protected:
+  //! Fill this packet from the bytes in a buffer.
+  virtual void fromBuffer(boost::asio::streambuf &buffer) override;
+
 };
 
 } // End sc2tm namespace
