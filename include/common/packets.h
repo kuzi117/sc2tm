@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace sc2tm {
+// TODO provide a way to know how much data to read
 
 // It might be possible to move the streambuf constructor to this so not every packet has to define
 // it
@@ -82,6 +83,14 @@ struct ClientHandshakePacket : Packet {
    */
   virtual void toBuffer(boost::asio::streambuf &buffer) override;
 
+  //! Get the size this packet will place in the buffer.
+  size_t size() {
+    return
+        sizeof(uint8_t) * 3 + // The three version numbers
+        sizeof(uint32_t) * 2 + // The hash size fields
+        sizeof(uint8_t) * (botHashes.size() + mapHashes.size()) * SHA256::DIGEST_SIZE;
+  }
+
 protected:
   //! Fill this packet from the bytes in a buffer.
   /**
@@ -118,6 +127,11 @@ struct PregameCommandPacket : Packet {
   //! Converts this packet into data appropriate for sending over the network.
   virtual void toBuffer(boost::asio::streambuf &buffer) override;
 
+  //! Get the size this packet will place in the buffer.
+  static size_t size() {
+    return sizeof(PregameCommand);
+  }
+
 protected:
   //! Fill this packet from the bytes in a buffer.
   virtual void fromBuffer(boost::asio::streambuf &buffer) override;
@@ -146,6 +160,11 @@ struct PregameDisconnectPacket : Packet {
   //! Converts this packet into data appropriate for sending over the network.
   virtual void toBuffer(boost::asio::streambuf &buffer) override;
 
+  //! Get the size this packet will place in the buffer.
+  static size_t size() {
+    return sizeof(PregameDisconnectReason);
+  }
+
 protected:
   //! Fill this packet from the bytes in a buffer.
   virtual void fromBuffer(boost::asio::streambuf &buffer) override;
@@ -167,6 +186,11 @@ struct StartGamePacket : Packet {
 
   //! Converts this packet into data appropriate for sending over the network.
   virtual void toBuffer(boost::asio::streambuf &buffer) override;
+
+  //! Get the size this packet will place in the buffer.
+  static size_t size() {
+    return sizeof(data);
+  }
 
 protected:
   //! Fill this packet from the bytes in a buffer.
@@ -196,6 +220,11 @@ struct GameStatusPacket : Packet {
 
   //! Converts this packet into data appropriate for sending over the network.
   virtual void toBuffer(boost::asio::streambuf &buffer) override;
+
+  //! Get the size this packet will place in the buffer.
+  static size_t size() {
+    return sizeof(GameStatus);
+  }
 
 protected:
   //! Fill this packet from the bytes in a buffer.
