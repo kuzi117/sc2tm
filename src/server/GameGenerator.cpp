@@ -21,39 +21,54 @@ sc2tm::GameGenerator::Matchup::Matchup(SHA256Hash::ptr b0, SHA256Hash::ptr b1) :
 // TODO We need to lock this when multithreading happens
 bool sc2tm::GameGenerator::generateGame(Game &game, HashSet cBots, HashSet cMaps){
   // Get the bots and maps that the client and us have in common
-  HashSet botInter;
-  HashSet mapInter;
-  std::set_intersection(bots.begin(), bots.end(),
-                        cBots.begin(), cBots.end(),
-                        std::inserter(botInter, botInter.end()),
+  // Use temporary scopes to destroy the extra hash sets we make during intersection and subtraction
+  {
+    // Bots
+    HashSet botInter;
+    std::set_intersection(bots.begin(), bots.end(),
+                          cBots.begin(), cBots.end(),
+                          std::inserter(botInter, botInter.end()),
+                          CompareHashPtrFtor());
+
+    HashSet unfinishedBots;
+    std::set_difference(botInter.begin(), botInter.end(),
+                        finishedBots.begin(), finishedBots.end(),
+                        std::inserter(unfinishedBots, unfinishedBots.end()),
                         CompareHashPtrFtor());
-  std::set_intersection(maps.begin(), maps.end(),
-                        cMaps.begin(), cMaps.end(),
-                        std::inserter(mapInter, mapInter.end()),
-                        CompareHashPtrFtor());
+
+    // Assign over the input set
+    cBots = unfinishedBots;
+  }
+
+  {
+    // Maps
+    HashSet mapInter;
+    std::set_intersection(maps.begin(), maps.end(),
+                          cMaps.begin(), cMaps.end(),
+                          std::inserter(mapInter, mapInter.end()),
+                          CompareHashPtrFtor());
+
+    // Assign over the input set
+    cMaps = mapInter;
+  }
 
   // If there's not enough bots for a matchup or a single map to play on then there's no games
   // to give out for this client.
-  if (botInter.size() < 2 || mapInter.empty())
+  if (cBots.size() < 2 || cMaps.empty())
     return false;
 
-  // Do we ever succeed?
-  bool success;
-
   // Try to find a matchup in the active matches from our list of common bots
-  success = generateActiveMap(game, botInter, mapInter);
-  if (success)
+  if (generateActiveMap(game, cBots, cMaps))
     return true;
 
   // Well we didn't find an already active matchup that this client could participate in, so we'll
   // try scheduling a new map for an existing matchup.
-  success = generateActiveMatchup(game, botInter, mapInter);
-  if (success)
+  if (generateActiveMatchup(game, cBots, cMaps))
     return true;
 
   // Couldn't find an existing matchup and new map, time to just see what sticks and generate an
   // entirely new matchup. If this fails there's no hope for the client.
-  return generateNewMatchup(game, botInter, mapInter);
+  return generateNewMatchup(game, cBots, cMaps);
 }
 
 bool sc2tm::GameGenerator::generateActiveMap(Game &game, HashSet cBots, HashSet cMaps) {
@@ -93,7 +108,6 @@ bool sc2tm::GameGenerator::generateActiveMap(Game &game, HashSet cBots, HashSet 
   return false;
 }
 
-//
 bool sc2tm::GameGenerator::generateActiveMatchup(Game &game, HashSet cBots, HashSet cMaps) {
   for (auto botIt0 = cBots.begin(), end0 = std::prev(cBots.end()); botIt0 != end0; ++botIt0) {
     for (auto botIt1 = std::next(botIt0), end1 = cBots.end(); botIt1 != end1; ++botIt1) {
@@ -183,6 +197,6 @@ bool sc2tm::GameGenerator::generateActiveMatchup(Game &game, HashSet cBots, Hash
   return false;
 }
 
-bool sc2tm::GameGenerator::generateNewMatchup(Game &game, HashSet cBot, HashSet cMaps) {
+bool sc2tm::GameGenerator::generateNewMatchup(Game &game, HashSet cBots, HashSet cMaps) {
   // TODO fill me in please!
 }
