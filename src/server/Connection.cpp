@@ -13,10 +13,10 @@ sc2tm::Connection::~Connection() {
 
 void sc2tm::Connection::start() {
   auto readHandshakeSizeFn =
-      [&] (const boost::system::error_code& error, std::size_t bytes_transferred) {
+      [&] (const boost::system::error_code& error, std::size_t byteCount) {
         // Sanity checking
         assert(error.value() == boost::system::errc::success); // TODO handle failures
-        assert(bytes_transferred == sizeof(uint32_t));
+        assert(byteCount == sizeof(uint32_t));
 
         // Create an istream from the buffer
         std::istream is(&buffer);
@@ -26,9 +26,9 @@ void sc2tm::Connection::start() {
 
         // Make the second callback that actually reads the handshake
         auto readHandshakeFn =
-            [&, size] (const boost::system::error_code& error2, std::size_t bytes_transferred2) {
+            [&, size] (const boost::system::error_code& error2, std::size_t byteCount2) {
               assert(error2.value() == boost::system::errc::success); // TODO handle failures
-              assert(bytes_transferred2 == size);
+              assert(byteCount2 == size);
               readHandshake();
             };
         boost::asio::async_read(_socket, buffer, boost::asio::transfer_exactly(size),
@@ -78,7 +78,7 @@ void sc2tm::Connection::scheduleGame() {
   bool success = server.gen.generateGame(game, bots, maps);
   if (!success)
     sendPregameDisconnect(NO_GAMES);
-  sendGame();
+  sendStartGame();
 }
 
 void sc2tm::Connection::sendPregameDisconnect(PregameDisconnectReason r) {
@@ -91,12 +91,14 @@ void sc2tm::Connection::sendPregameDisconnect(PregameDisconnectReason r) {
   // Make a function to write the bytes and then request that we destroy this client connection
   auto destroyConnectionFn =
       [&] (const boost::system::error_code& error, std::size_t byteCount) {
+        assert(error == boost::system::errc::success); // TODO handle error
+        assert(byteCount == PregameCommandPacket::size());
         server.requestDestroyConnection(id);
       };
   boost::asio::async_write(_socket, buffer, destroyConnectionFn);
 }
 
-void sc2tm::Connection::sendGame() {
+void sc2tm::Connection::sendStartGame() {
   // Generate our packets and put them in the buffer.
   PregameCommandPacket cmd(START_GAME);
   StartGamePacket gamePacket(game);
@@ -107,22 +109,22 @@ void sc2tm::Connection::sendGame() {
   auto waitReadStatusFn =
       [&] (const boost::system::error_code& error, std::size_t byteCount) {
         assert(error.value() == boost::system::errc::success); // TODO handle failures
-        assert(byteCount == sizeof(PregameCommandPacket) + sizeof(StartGamePacket));
+        assert(byteCount == PregameCommandPacket::size() + StartGamePacket::size());
 
         // Make a function to call the readHandshake function
         auto readStatusFn =
             [&] (const boost::system::error_code& error2, std::size_t byteCount2) {
               assert(error2.value() == boost::system::errc::success); // TODO handle failures
-              assert(byteCount2 == sizeof(GameStatusPacket));
+              assert(byteCount2 == GameStatusPacket::size());
               readGameStatus();
             };
         boost::asio::async_read(_socket, buffer,
-                                boost::asio::transfer_exactly(sizeof(GameStatusPacket)),
+                                boost::asio::transfer_exactly(GameStatusPacket::size()),
                                 readStatusFn);
       };
   boost::asio::async_write(_socket, buffer, waitReadStatusFn);
 }
 
 void sc2tm::Connection::readGameStatus() {
-  //TODO
+  // TODO
 }

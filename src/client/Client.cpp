@@ -33,6 +33,7 @@ sc2tm::Client::Client(asio::io_service &service, std::string host, std::string p
 void sc2tm::Client::sendHandshake() {
   // Make a handshake packet from our data
   sc2tm::ClientHandshakePacket handshake(botMap, mapMap);
+  size_t size = handshake.size(); // Get data for check later
 
   // Put the handshake into our buffer.
   handshake.toBuffer(buffer);
@@ -41,23 +42,23 @@ void sc2tm::Client::sendHandshake() {
 
   // Build the function that will respond to the write being done by starting a wait for a read.
   auto waitPregameCmdFn =
-      [&] (const boost::system::error_code& error, std::size_t byteCount) {
+      [&, size] (const boost::system::error_code& error, std::size_t byteCount) {
         assert(error == boost::system::errc::success); // TODO handle error
-        assert(buffer.size() == 0);
+        assert(byteCount == size + sizeof(uint32_t)); // Add sizeof size
 
         // Build the function that will respond to the buffer being filled with the server's
         // response, which will be some PregameCommand.
         auto readPregameCommandFn =
             [&] (const boost::system::error_code& error2, std::size_t byteCount2) {
               assert(error2 == boost::system::errc::success); // TODO handle error
-              assert(byteCount2 == sizeof(PregameCommand));
+              assert(byteCount2 == PregameCommandPacket::size());
               readPregameCommand();
             };
 
         // Async wait for the buffer to be filled with a PregameCommand. Respond by calling the
         // function that reads PregameCommands.
         boost::asio::async_read(_socket, buffer,
-                                boost::asio::transfer_exactly(sizeof(PregameCommand)),
+                                boost::asio::transfer_exactly(PregameCommandPacket::size()),
                                 readPregameCommandFn);
       };
 
@@ -76,14 +77,13 @@ void sc2tm::Client::readPregameCommand() {
     auto waitForReasonFn =
         [&] (const boost::system::error_code& error, std::size_t byteCount)  {
           assert(error == boost::system::errc::success); // TODO handle error
-          assert(byteCount == sizeof(PregameDisconnectPacket));
+          assert(byteCount == PregameDisconnectPacket::size());
           // Once we have the data we can handle it
           readPregameDisconnectReason();
         };
     boost::asio::async_read(_socket, buffer,
-                            boost::asio::transfer_exactly(sizeof(PregameDisconnectPacket)),
+                            boost::asio::transfer_exactly(PregameDisconnectPacket::size()),
                             waitForReasonFn);
-
     break;
   }
   case START_GAME: break; // TODO start game
