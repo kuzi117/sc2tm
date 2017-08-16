@@ -82,7 +82,7 @@ private:
   //! Send a PregameDisconnect.
   void sendPregameDisconnect(PregameDisconnectReason reason);
   //! Send the client a game to play.
-  void sendGame();
+  void sendStartGame();
   //! Read the game status.
   void readGameStatus();
 
