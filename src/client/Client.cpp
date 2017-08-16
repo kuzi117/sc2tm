@@ -71,7 +71,21 @@ void sc2tm::Client::readPregameCommand() {
   std::cout << "GOT PREGAME COMMAND: " << p.cmd << '\n'; // TODO debug
 
   switch (p.cmd) {
-  case DISCONNECT: readPregameDisconnectReason(); break;
+  case DISCONNECT: {
+    // Make wait for reason function
+    auto waitForReasonFn =
+        [&] (const boost::system::error_code& error, std::size_t byteCount)  {
+          assert(error == boost::system::errc::success); // TODO handle error
+          assert(byteCount == sizeof(PregameDisconnectPacket));
+          // Once we have the data we can handle it
+          readPregameDisconnectReason();
+        };
+    boost::asio::async_read(_socket, buffer,
+                            boost::asio::transfer_exactly(sizeof(PregameDisconnectPacket)),
+                            waitForReasonFn);
+
+    break;
+  }
   case START_GAME: break; // TODO start game
   default:
     assert(false); // TODO handle bad command?
