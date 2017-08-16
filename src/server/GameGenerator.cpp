@@ -169,6 +169,7 @@ bool sc2tm::GameGenerator::generateActiveMatchup(Game &game, HashSet cBots, Hash
       // Good new everyone! We found a usable map!
       // Put it in the schedule and then send the game off.
       // Get the map we're going to schedule.
+      assert(!cMaps.empty());
       SHA256Hash::ptr map = *cMaps.begin();
 
       // Ensure that we haven't screwed up and are trying to schedule a map that is already
@@ -198,5 +199,49 @@ bool sc2tm::GameGenerator::generateActiveMatchup(Game &game, HashSet cBots, Hash
 }
 
 bool sc2tm::GameGenerator::generateNewMatchup(Game &game, HashSet cBots, HashSet cMaps) {
-  // TODO fill me in please!
+  // Build the set of matchups that are in the active map
+  MatchupSet activeMatchups;
+  for (const auto &matchup : active)
+    activeMatchups.insert(matchup.first);
+
+  // Add matchups that are in the finished map (union), all of these matchups are "active"
+  for (const auto &matchup : finished)
+    activeMatchups.insert(matchup.first);
+
+  // Now try to find a matchup that isn't active
+  for (auto botIt0 = cBots.begin(), end0 = std::prev(cBots.end()); botIt0 != end0; ++botIt0) {
+    for (auto botIt1 = std::next(botIt0), end1 = cBots.end(); botIt1 != end1; ++botIt1) {
+      // Make the matchup
+      Matchup matchup(*botIt0, *botIt1);
+
+      // If the matchup exists in the active set we just want to move on
+      auto activeIt = activeMatchups.find(matchup);
+      if (activeIt != activeMatchups.end())
+        continue;
+
+      // Now we've found a matchup that hasn't started! Start it!
+      // Create counter and take a game from it
+      GameCounter counter(numGames);
+      --counter.left;
+
+      // Get our map
+      assert(!cMaps.empty()); // Need at least one map
+      SHA256Hash::ptr map = *cMaps.begin();
+
+      // Create a CounterMap with the map and counter
+      CounterMap counterMap;
+      counterMap.emplace(map, counter);
+
+      // Place the counter map into the active map with our matchup
+      active.emplace(matchup, counterMap);
+
+      // Fill in the game
+      game.bot0 = *botIt0;
+      game.bot1 = *botIt1;
+      game.map = map;
+
+      // We succeeded!
+      return true;
+    }
+  }
 }
