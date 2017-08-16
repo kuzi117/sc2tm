@@ -72,6 +72,7 @@ protected:
     uint32 m_h[8];
 };
 
+// TODO Test the comparison function
 //! Light wrapper around SHA256 digest.
 class SHA256Hash {
   //! The actual digest bits.
