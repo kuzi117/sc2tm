@@ -154,16 +154,16 @@ protected:
 //! All data required for scheduling a new game.
 struct StartGamePacket : Packet {
   //! The game to send to the client.
-  Game game;
+  uint8_t data[3][SHA256::DIGEST_SIZE];
 
   //! No default constructor.
   StartGamePacket() = delete;
 
   //! Construct a StartGamePacket from a game.
-  StartGamePacket(Game game) : game(game) { }
+  StartGamePacket(const Game &game);
 
   //! Construct a PregameDisconnectPacket from the bytes in a buffer.
-  StartGamePacket(boost::asio::streambuf &buffer) : game() { fromBuffer(buffer); }
+  StartGamePacket(boost::asio::streambuf &buffer) : data() { fromBuffer(buffer); }
 
   //! Converts this packet into data appropriate for sending over the network.
   virtual void toBuffer(boost::asio::streambuf &buffer) override;

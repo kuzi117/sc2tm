@@ -155,14 +155,20 @@ void sc2tm::PregameDisconnectPacket::fromBuffer(boost::asio::streambuf &buffer) 
 }
 
 // --- StartGamePacket
+sc2tm::StartGamePacket::StartGamePacket(const Game &game) : data{} {
+  std::memcpy(data[0], game.bot0->get(), SHA256::DIGEST_SIZE);
+  std::memcpy(data[1], game.bot1->get(), SHA256::DIGEST_SIZE);
+  std::memcpy(data[2], game.map->get(), SHA256::DIGEST_SIZE);
+}
+
 void sc2tm::StartGamePacket::toBuffer(boost::asio::streambuf &buffer) {
   // Create an ostream from the buffer
   std::ostream os(&buffer);
 
   // Write the two bots and the map
-  writeHashBuffer(game.bot0->get(), os);
-  writeHashBuffer(game.bot1->get(), os);
-  writeHashBuffer(game.map->get(), os);
+  writeHashBuffer(data[0], os);
+  writeHashBuffer(data[1], os);
+  writeHashBuffer(data[2], os);
 }
 
 void sc2tm::StartGamePacket::fromBuffer(boost::asio::streambuf &buffer) {
@@ -170,9 +176,9 @@ void sc2tm::StartGamePacket::fromBuffer(boost::asio::streambuf &buffer) {
   std::istream is(&buffer);
 
   // Read the two bots and the map
-  readHashBuffer(game.bot0->get(), is);
-  readHashBuffer(game.bot1->get(), is);
-  readHashBuffer(game.map->get(), is);
+  readHashBuffer(data[0], is);
+  readHashBuffer(data[1], is);
+  readHashBuffer(data[2], is);
 }
 
 // --- GameStatusPacket
