@@ -74,10 +74,10 @@ class GameGenerator {
 
   //! Functor to order matchups.
   struct CompareMatchupFtor {
-    int operator()(const Matchup &match0, const Matchup &match01) const {
-      int first = SHA256Hash::compare(match0.bot0, match01.bot0);
+    int operator()(const Matchup &match0, const Matchup &match1) const {
+      int first = SHA256Hash::compare(match0.bot0, match1.bot0);
       if (first == 0)
-        return SHA256Hash::compare(match0.bot1, match01.bot1);
+        return SHA256Hash::compare(match0.bot1, match1.bot1);
       else
         return first;
     }
