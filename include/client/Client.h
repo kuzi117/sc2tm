@@ -2,6 +2,7 @@
 #define SC2TM_CLIENT_H
 
 #include "common/file_operations.h"
+#include "common/Game.h"
 
 #include <boost/asio.hpp>
 
@@ -32,6 +33,9 @@ class Client {
   //! The buffer this client uses.
   boost::asio::streambuf buffer;
 
+  //! The game this client is currently playing.
+  Game game;
+
 public:
   //! Get the TCP socket this client is connected on.
   tcp::socket& socket()
@@ -58,9 +62,10 @@ private:
   void sendHandshake();
   //! Receive a pregame command.
   void readPregameCommand();
-
-  // Pregame state functions
+  //! Read a reason code for pregame disconnect.
   void readPregameDisconnectReason();
+  //! Read a game sent to be scheduled.
+  void readStartGame();
 };
 
 } // End sc2tm namespace

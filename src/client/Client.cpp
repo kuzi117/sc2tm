@@ -78,6 +78,7 @@ void sc2tm::Client::readPregameCommand() {
         [&] (const boost::system::error_code& error, std::size_t byteCount)  {
           assert(error == boost::system::errc::success); // TODO handle error
           assert(byteCount == PregameDisconnectPacket::size());
+
           // Once we have the data we can handle it
           readPregameDisconnectReason();
         };
@@ -86,13 +87,28 @@ void sc2tm::Client::readPregameCommand() {
                             waitForReasonFn);
     break;
   }
-  case START_GAME: break; // TODO start game
+  case START_GAME: {
+    // Make wait for game function
+    auto waitForGameFn =
+        [&] (const boost::system::error_code& error, std::size_t byteCount) {
+          assert(error == boost::system::errc::success); // TODO handle error
+          assert(byteCount == StartGamePacket::size());
+
+          // Once we have the data we can handle it
+          readStartGame();
+        };
+    boost::asio::async_read(_socket, buffer,
+                            boost::asio::transfer_exactly(StartGamePacket::size()),
+                            waitForGameFn);
+    break;
+  }
   default:
     assert(false); // TODO handle bad command?
   }
 }
 
 void sc2tm::Client::readPregameDisconnectReason() {
+  // Get our packet
   PregameDisconnectPacket p(buffer);
   std::cout << "GOT PREGAME DISCONNECT REASON: " << p.reason << '\n';
 
@@ -100,4 +116,19 @@ void sc2tm::Client::readPregameDisconnectReason() {
   // end the run loop
 
   // TODO print useful disconnect message.
+}
+
+void sc2tm::Client::readStartGame() {
+  // Get our packet
+  StartGamePacket p(buffer);
+
+  // Build a game from it
+  game.bot0 = std::make_shared<SHA256Hash>(p.data[0]);
+  game.bot1 = std::make_shared<SHA256Hash>(p.data[1]);
+  game.map = std::make_shared<SHA256Hash>(p.data[2]);
+
+  std::cout << "GOT GAME:\n"
+            << "  " << game.bot0 << '\n'
+            << "  " << game.bot1 << '\n'
+            << "  " << game.map << '\n';
 }
