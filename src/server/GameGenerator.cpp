@@ -14,8 +14,8 @@ sc2tm::GameGenerator::GameGenerator(const SHAFileMap &botMap, const SHAFileMap &
 }
 
 sc2tm::GameGenerator::Matchup::Matchup(SHA256Hash::ptr b0, SHA256Hash::ptr b1) :
-    bot0(SHA256Hash::compare(b0, b1) > 0 ? b0 : b1),
-    bot1(SHA256Hash::compare(b0, b1) > 0 ? b1 : b0) { }
+    bot0(SHA256Hash::compare(b0, b1) < 0 ? b0 : b1),
+    bot1(SHA256Hash::compare(b0, b1) < 0 ? b1 : b0) { }
 
 bool sc2tm::GameGenerator::Matchup::contains(const SHA256Hash::ptr bot) const {
   return SHA256Hash::compare(bot, bot0) == 0 || SHA256Hash::compare(bot, bot1) == 0;
@@ -87,8 +87,8 @@ bool sc2tm::GameGenerator::generateActiveMap(Game &game, HashSet cBots, HashSet 
   for (auto botIt0 = cBots.begin(), end0 = std::prev(cBots.end()); botIt0 != end0; ++botIt0) {
     for (auto botIt1 = std::next(botIt0), end1 = cBots.end(); botIt1 != end1; ++botIt1) {
       // Make the matchup and try to find it in the map
-      Matchup m(*botIt0, *botIt1);
-      auto activePairIt = active.find(m);
+      Matchup matchup(*botIt0, *botIt1);
+      auto activePairIt = active.find(matchup);
 
       // If we found a matchup we need to find an active map that we also have in common
       if (activePairIt != active.end()) {
@@ -100,8 +100,8 @@ bool sc2tm::GameGenerator::generateActiveMap(Game &game, HashSet cBots, HashSet 
           if (counterIt != activeMaps.end() && counterIt->second.left > 0) {
             // Found a match to give out!
             // Fill in the game
-            game.bot0 = *botIt0;
-            game.bot1 = *botIt1;
+            game.bot0 = matchup.bot0;
+            game.bot1 = matchup.bot1;
             game.map = map;
 
             // Decrement the game counter
@@ -131,7 +131,7 @@ bool sc2tm::GameGenerator::generateActiveMatchup(Game &game, HashSet cBots, Hash
 
       // If the match up wasn't in either set then move on because it has never been scheduled
       // before
-      if (activePairIt == active.end() && finishedIt != finished.end())
+      if (activePairIt == active.end() && finishedIt == finished.end())
         continue;
 
       // If we found an active matchup we subtract the set of currently active maps from the set
@@ -196,8 +196,8 @@ bool sc2tm::GameGenerator::generateActiveMatchup(Game &game, HashSet cBots, Hash
       active[matchup].emplace(map, counter);
 
       // Fill the game in
-      game.bot0 = *botIt0;
-      game.bot1 = *botIt1;
+      game.bot0 = matchup.bot0;
+      game.bot1 = matchup.bot1;
       game.map = map;
 
       // Tell them of our successes
@@ -247,8 +247,8 @@ bool sc2tm::GameGenerator::generateNewMatchup(Game &game, HashSet cBots, HashSet
       active.emplace(matchup, counterMap);
 
       // Fill in the game
-      game.bot0 = *botIt0;
-      game.bot1 = *botIt1;
+      game.bot0 = matchup.bot0;
+      game.bot1 = matchup.bot1;
       game.map = map;
 
       // We succeeded!
