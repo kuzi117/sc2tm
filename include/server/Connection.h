@@ -1,6 +1,9 @@
 #ifndef SC2TM_CONNECTION_H
 #define SC2TM_CONNECTION_H
 
+#include "common/Game.h"
+#include "common/sha256.h"
+
 #include <boost/asio.hpp>
 
 #include <memory>
@@ -32,6 +35,15 @@ class Connection {
 
   //! This connection's id.
   ConnId_ id;
+
+  //! This client's available bots.
+  HashSet bots;
+
+  //! This client's available maps.
+  HashSet maps;
+
+  //! This connection's currently playing game.
+  Game game;
 
 public:
   //! Convenience typedef for a connection shared ptr.
@@ -65,10 +77,14 @@ private:
   // State functions
   //! Read the client handshake.
   void readHandshake();
-
-  // Pregame state functions
-  //! Send a PregameDisconnect
+  //! Schedule a game and send to the client.
+  void scheduleGame();
+  //! Send a PregameDisconnect.
   void sendPregameDisconnect(PregameDisconnectReason reason);
+  //! Send the client a game to play.
+  void sendGame();
+  //! Read the game status.
+  void readGameStatus();
 
 };
 
