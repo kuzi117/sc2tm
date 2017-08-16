@@ -120,7 +120,7 @@ void sc2tm::Connection::sendGame() {
                                 boost::asio::transfer_exactly(sizeof(GameStatusPacket)),
                                 readStatusFn);
       };
-  boost::asio::async_read(_socket, buffer, waitReadStatusFn);
+  boost::asio::async_write(_socket, buffer, waitReadStatusFn);
 }
 
 void sc2tm::Connection::readGameStatus() {
