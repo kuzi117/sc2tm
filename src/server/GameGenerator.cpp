@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 
 sc2tm::GameGenerator::GameGenerator(const SHAFileMap &botMap, const SHAFileMap &mapMap) {
   for (auto it : botMap)
