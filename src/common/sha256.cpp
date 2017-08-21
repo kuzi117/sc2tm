@@ -169,7 +169,7 @@ SHA256Hash::ptr sha256(std::ifstream &file)
     ctx.init();
 
     // Create our intermediate buffer
-    int buffSize = 0x8000; // This could be increased
+    const int buffSize = 0x8000; // This could be increased
     unsigned char buff[buffSize] = { };
 
     // Iteratively update the context
