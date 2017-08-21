@@ -100,7 +100,7 @@ public:
   static int compare(const SHA256Hash &hash1, const SHA256Hash &hash2);
 
   //! Convenience compare between two ptrs.
-  static int compare(const ptr &hash1, const ptr &hash2) { compare(*hash1, *hash2); }
+  static int compare(const ptr &hash1, const ptr &hash2) { return compare(*hash1, *hash2); }
 
 public:
 };
