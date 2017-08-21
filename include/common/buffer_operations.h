@@ -2,7 +2,7 @@
 #define SC2TM_BUFFER_OPERATIONS_H
 
 #ifdef  _WIN32
-#include <WinSock32.h>
+#include <Winsock2.h>
 #else
 #include <arpa/inet.h>
 #endif
