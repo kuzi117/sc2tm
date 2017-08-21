@@ -3,7 +3,11 @@
 #include "common/config.h"
 #include "common/buffer_operations.h"
 
+#ifdef _WIN32
+#include <Winsock32.h>
+#else
 #include <arpa/inet.h>
+#endif
 #include <cassert>
 #include <cstring>
 #include <iostream>
