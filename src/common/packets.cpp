@@ -4,7 +4,7 @@
 #include "common/buffer_operations.h"
 
 #ifdef _WIN32
-#include <Winsock32.h>
+#include <WinSock32.h>
 #else
 #include <arpa/inet.h>
 #endif
